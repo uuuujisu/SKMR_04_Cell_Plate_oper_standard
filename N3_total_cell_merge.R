@@ -52,9 +52,9 @@ fdr.name <- list.files()
 Explotion_Data_df <-  NULL
 File.num <- 0
 Explotion_total_Data_df <- NULL
-
+fdr.name
 for (fdr in 1: length(fdr.name)) {
-
+#fdr <- 29
     # 폴더의 fileList
     fileList <- list.files(path=fdr.name[fdr])
     cat("fdr.name is ",fdr.name[fdr],"\n")
@@ -191,9 +191,13 @@ Tmp_df <-  Explotion_total_Data_df %>%
     ungroup
 Tmp_df <- Tmp_df[!duplicated(Tmp_df), ]
 
+
 # N3 연소발생여부 data에서 Monel Type filtering
 N3_Explosion_DF_tmp <- N3_Explosion_DF %>% 
     filter(Cell종류=="Monel")
+
+# cell 이름 소문자를 대문자로 변환
+N3_Explosion_DF_tmp[,'Item_No'] <- toupper(N3_Explosion_DF_tmp[,'Item_No'])
 
 # file numbering loop
 # cell이 같으면서 폭발 날짜도 같은 것끼리 file number 붙이기
@@ -210,7 +214,7 @@ for (i in 1:nrow(Tmp_df)) {
 #File_num error 확인
 #N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
 # 7개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음
-# 2개 : Item_No 소문자 i-AC, j-Y
+# 2개 : Item_No 소문자 i-AC, j-Y --------> 해결
 # 1개 : J-V 3/14 3/15 data 1로 통합되어있음
 # 1ro : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
 
@@ -221,7 +225,7 @@ N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ ,
 Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num", "Item_No")) %>% 
     arrange(연소발생일)
 
-rm(Tmp_df, N3_Explosion_DF_tmp)
+#rm(Tmp_df, N3_Explosion_DF_tmp)
 
 #0.Data에 merge data 저장할 폴더 생성하고 wirte.csv
 #시간이 오래걸림...X
