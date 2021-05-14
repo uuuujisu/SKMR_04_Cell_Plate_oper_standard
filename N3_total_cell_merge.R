@@ -160,8 +160,13 @@ head(Explotion_total_Data_df)
 # data type numeric / factor
 Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라인_VV", "양극ProcessGas_VV"
 Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)] <- sapply(Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)], as.numeric)
+
+#숫자형 변수 바꿀때 문자형이 강제로 NA로 변환되는 warning
+#************데이터 밀려서 들어와있는것 확인 필요함 
+#N-3_RI_110N-4.csv 데이터 확인하면 304, 477, 1183, 1714, 1891 행이 밀려서 들어가있음. 3LICZI151N.PV tag 확인..
+
 #Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))], as.factor) 
-#시간이 오래 걸려서 코드 변경함
+#시간이 오래 걸려서 코드 변경
 Explotion_total_Data_df$연소여부 <- as.factor(Explotion_total_Data_df$연소여부)
 str(Explotion_total_Data_df)$연소여부
 
