@@ -160,7 +160,11 @@ head(Explotion_total_Data_df)
 # data type numeric / factor
 Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라인_VV", "양극ProcessGas_VV"
 Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)] <- sapply(Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)], as.numeric)
-Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))], as.factor) 
+#Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))], as.factor) 
+#시간이 오래 걸려서 코드 변경함
+Explotion_total_Data_df$연소여부 <- as.factor(Explotion_total_Data_df$연소여부)
+str(Explotion_total_Data_df)$연소여부
+
 # Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))], as.factor) 
 
 
@@ -219,5 +223,7 @@ Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num
 
 rm(Tmp_df, N3_Explosion_DF_tmp)
 
-
-
+#0.Data에 merge data 저장할 폴더 생성하고 wirte.csv
+#시간이 오래걸림...X
+dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.csv")
+#write.csv(Merge_df,dirpath)
