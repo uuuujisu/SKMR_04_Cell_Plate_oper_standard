@@ -1,0 +1,349 @@
+---
+title: "Cell Plate 전류산포 운전 표준수립"
+author: "Lee Jae yong"
+date: '2021 4 26'
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=TRUE, cache=FALSE, message=FALSE, warning=FALSE, results='hide'}
+ 
+ knitr::opts_chunk$set(echo = TRUE)
+
+packages <- c("knitr", "stats", "dplyr","rmarkdown","tibble", "data.table","kableExtra","tidyr", "ggridges", "ggplot2", "anytime", "stringr", "patchwork")
+
+# invisible(lapply(packages, library, character.only = TRUE))
+ if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
+install.packages('rmdformats')
+
+#packages
+ packages <- c("tidyr","tidyverse","dplyr", "knitr", "rmarkdown")
+install.packages(packages, dependencies = TRUE)
+
+lapply(packages, library, character.only = TRUE)
+
+
+#directory - R_code
+print(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+source("./Plot_lib.R")
+source("./R_function.R")
+
+return_CName_chr<-function(df1, Tag){
+    for (i in 1:NCOL(df1)){
+        if (df1[i]==Tag){
+            return(names(df1)[i])
+        }
+    }
+}
+
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+
+getwd()
+```
+
+# 1.Data_Load
+## 1-1.연소이력&Tag Data
+
+```{r ExplosionHistory_Tag_Load, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+#directory - R_code
+# print(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+#directory - DATA
+setwd("../0.Data")
+#setwd("D:/NF3연소 사전감지 과제/4.Cell Plate 운전표준수립/YU_JISU/DATA")
+getwd()
+
+
+# N3 연소발생여부 데이터
+N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO.csv", header = TRUE))
+N3_Explosion_DF <- as.data.frame(sapply(N3_Explosion_DF, function(x) {ifelse(is.na(x),0,x)}))
+
+# N3 Tag 데이터
+N3_Tag_DF <- as.data.frame(read.csv("N-3 Tag NO.csv", header = TRUE))
+
+
+```
+
+
+## 1-2.연소 분Data
+```{r Explotion_MinData_Load, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+getwd()
+
+# #directory - R_code
+print(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+# N3 연소 분데이터
+setwd("../0.Data/N3_20년_Cell_MinData")
+
+# 폴더 list / 폴더 설정
+fdr.name <- list.files(pattern="N-3")
+fdr <- 27 #"N-3_RJ-110V"
+
+# 폴더의 fileList
+fileList <- list.files(path=fdr.name[fdr])
+cat("fdr.name is ",fdr.name[fdr],"\n")
+
+# 폴더 이름 str, 각각 마지막 글자 따서 cell 이름 출력
+tmpstr <- unlist(strsplit(fdr.name[fdr],split='_', fixed=TRUE))[2]
+tmpstr <- unlist(strsplit(tmpstr,split='-', fixed=TRUE))
+Explosion_Cell <- paste0(substr(tmpstr[1], 2, 3),"-",gsub('\\d','', tmpstr[2]));rm(tmpstr) 
+
+# J-v cell Tag name
+Tagname_df <-  N3_Tag_DF %>% filter(Item_No==Explosion_Cell)
+
+# fdr 폴더 내 파일 읽어와서 full data 만드는 loop
+Explotion_Data_df <-  NULL
+File.num <- 0
+for(i in 1:length(fileList)){
+    # i <- 1
+    tmp_df <-as.data.frame(read.csv(paste0(fdr.name[fdr],"/",fileList[i]),fill=TRUE,na.strings=c(NA,""),check.names=FALSE))  
+    File.num <- File.num+1;
+    tmp_df <- cbind(File_num=File.num, tmp_df); flush.console;cat(fdr.name[fdr]," 의",i,"번째 파일\n")
+    # Tag name 변수명 변경하는 loop
+    for (j in 3:ncol(tmp_df)) {
+        names(tmp_df)[j] <- return_CName_chr(Tagname_df,names(tmp_df)[j])
+    }
+    names(tmp_df)[2] <- "Time"
+    #tibble package
+    tmp_df <- tmp_df %>% 
+        add_column("Item_No" = Explosion_Cell, .before = 'Time') %>% 
+        add_column("연소여부" = "연소", .before = 'Time')
+    
+    Tmp_DF <- data.frame(File_num = tmp_df$File_num,
+                         Item_No = tmp_df$Item_No,
+                         연소여부 = tmp_df$연소여부,
+                         Time = tmp_df$Time,
+                         전류 = tmp_df$전류,
+                         Plate_전류_151 = tmp_df$Plate_전류_151,
+                         Plate_전류_152 = tmp_df$Plate_전류_152,
+                         Plate_전류_153 = tmp_df$Plate_전류_153,
+                         Plate_전류_154 = tmp_df$Plate_전류_154,
+                         Plate_전류_155 = tmp_df$Plate_전류_155,
+                         Plate_전류_156 = tmp_df$Plate_전류_156,
+                         Plate_전류_157 = tmp_df$Plate_전류_157,
+                         Plate_전류_158 = tmp_df$Plate_전류_158,
+                         Plate_전류_159 = tmp_df$Plate_전류_159,
+                         Plate_전류_160 = tmp_df$Plate_전류_160,
+                         Plate_전류_161 = tmp_df$Plate_전류_161,
+                         Plate_전류_162 = tmp_df$Plate_전류_162,
+                         Plate_전류_163 = tmp_df$Plate_전류_163,
+                         Plate_전류_164 = tmp_df$Plate_전류_164,
+                         Plate_전류_165 = tmp_df$Plate_전류_165,
+                         Plate_전류_166 = tmp_df$Plate_전류_166,
+                         Plate_전류_167 = tmp_df$Plate_전류_167,
+                         Plate_전류_168 = tmp_df$Plate_전류_168,
+                         Plate_전류_169 = tmp_df$Plate_전류_169,
+                         Plate_전류_170 = tmp_df$Plate_전류_170,
+                         Plate_전류_171 = tmp_df$Plate_전류_171,
+                         Plate_전류_172 = tmp_df$Plate_전류_172,
+                         Plate_전류_173 = tmp_df$Plate_전류_173,
+                         Plate_전류_174 = tmp_df$Plate_전류_174,
+                         Plate_전류_175 = tmp_df$Plate_전류_175,
+                         Collector_압력_151 = tmp_df$Collector_압력_151,
+                         Collector_압력_152 = tmp_df$Collector_압력_152,
+                         Collector_압력_153 = tmp_df$Collector_압력_153,
+                         Collector_압력_154 = tmp_df$Collector_압력_154,
+                         Collector_압력_155 = tmp_df$Collector_압력_155,
+                         Collector_압력_156 = tmp_df$Collector_압력_156,
+                         Collector_압력_157 = tmp_df$Collector_압력_157,
+                         Collector_압력_158 = tmp_df$Collector_압력_158,
+                         Collector_압력_159 = tmp_df$Collector_압력_159,
+                         Collector_압력_160 = tmp_df$Collector_압력_160,
+                         Collector_압력_161 = tmp_df$Collector_압력_161,
+                         Collector_압력_162 = tmp_df$Collector_압력_162,
+                         Collector_압력_163 = tmp_df$Collector_압력_163,
+                         Collector_압력_164 = tmp_df$Collector_압력_164,
+                         Collector_압력_165 = tmp_df$Collector_압력_165,
+                         Collector_압력_166 = tmp_df$Collector_압력_166,
+                         Collector_압력_167 = tmp_df$Collector_압력_167,
+                         Collector_압력_168 = tmp_df$Collector_압력_168,
+                         Collector_압력_169 = tmp_df$Collector_압력_169,
+                         Collector_압력_170 = tmp_df$Collector_압력_170,
+                         Collector_압력_171 = tmp_df$Collector_압력_171,
+                         Collector_압력_172 = tmp_df$Collector_압력_172,
+                         Collector_압력_173 = tmp_df$Collector_압력_173,
+                         Collector_압력_174 = tmp_df$Collector_압력_174,
+                         Collector_압력_175 = tmp_df$Collector_압력_175)
+
+    
+    Explotion_Data_df <- rbind(Explotion_Data_df,Tmp_DF)
+    # kable(Explotion_Data_df, "html") %>% kable_styling(full_width = F)
+}   
+```
+
+# 2.Preprocessing
+
+```{r Preprocessing, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+# data type numeric / factor
+Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라인_VV", "양극ProcessGas_VV"
+Explotion_Data_df[,-which(colnames(Explotion_Data_df)%in%Column_name)] <- sapply(Explotion_Data_df[,-which(colnames(Explotion_Data_df)%in%Column_name)], as.numeric)
+Explotion_Data_df[,which(colnames(Explotion_Data_df)%in%c("연소여부"))] <- sapply(Explotion_Data_df[,which(colnames(Explotion_Data_df)%in%c("연소여부"))], as.factor) 
+# Explotion_Data_df[,which(colnames(Explotion_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))] <- sapply(Explotion_Data_df[,which(colnames(Explotion_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))], as.factor) 
+
+# plates 전류합 column 생성
+Explotion_Data_df$Plates전류합<-rowSums(Explotion_Data_df[,6:30], na.rm = TRUE)
+# Time format 변경
+Explotion_Data_df$Time <- as.POSIXct(Explotion_Data_df$Time, origin="1899-12-30", tz="GMT")
+Explotion_Data_df$Time <- format(Explotion_Data_df$Time,format='%Y-%m-%d %H:%M')
+
+# 연소 별 starttime, endtime column 생성
+Explotion_Data_df <- Explotion_Data_df %>% 
+    group_by(File_num) %>% 
+    mutate(GROUP_endtime = max(Time)) %>%
+    mutate(GROUP_starttime = min(Time)) %>%
+    ungroup
+Explotion_Data_df$GROUP_endtime <- format(Explotion_Data_df$GROUP_endtime,format='%Y-%m-%d %H:%M')
+Explotion_Data_df$GROUP_starttime <- format(Explotion_Data_df$GROUP_starttime,format='%Y-%m-%d %H:%M')
+
+# 연소 시간 요약
+Tmp_df <-  Explotion_Data_df %>% 
+    group_by(File_num) %>%
+    select(File_num,Item_No, GROUP_starttime, GROUP_endtime) %>%
+    arrange(File_num) %>%
+    ungroup
+Tmp_df <- Tmp_df[!duplicated(Tmp_df), ]
+
+# N3 연소발생여부 data에서 J-V cell Monel Type filtering
+N3_Explosion_DF_tmp <- N3_Explosion_DF %>% 
+    filter(Cell종류=="Monel"&Item_No=="J-V")
+
+# file numbering loop
+for (i in 1:nrow(Tmp_df)) {
+    cat(i, "\n")
+    for (j in 1:nrow(N3_Explosion_DF_tmp)) {
+        if (substr(Tmp_df[i,'GROUP_endtime'],1,10) == substr(N3_Explosion_DF_tmp[j,'연소발생일'],1,10)) {
+            N3_Explosion_DF_tmp[j, 'File_num'] <- Tmp_df[i,'File_num']
+        }
+    }
+}
+N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
+
+# J-V Cell 만 남은 'N3_Explosion_DF_tmp' 와 Explotion_Data_df를 join 함.
+# 액보충시간, cell 종류, 연소발생일월, plate 별 연소 여부 column 
+Merge_df <- merge(Explotion_Data_df, N3_Explosion_DF_tmp, by = c("File_num", "Item_No")) %>% 
+    arrange(연소발생일)
+
+rm(Tmp_df, N3_Explosion_DF_tmp)
+
+```
+
+# 3.탐색적 자료 분석(Exploratory data analysis)
+```{r EDA, echo=FALSE, eval=TRUE, warning=FALSE, tidy=FALSE, message=FALSE}
+
+File_Num <- unique(Merge_df$File_num)
+
+for (loop in 1:length(File_Num)) {
+    tmp_df <- Merge_df %>% filter(File_num==loop)
+    Explosion_Cell <- unique(tmp_df$Item_No)
+    Explosion_Time <- unique(tmp_df$GROUP_endtime)
+    
+    tmp_df$Time <- as.POSIXct(tmp_df$Time, origin="1899-12-30", tz="GMT")
+    tmp_df$액보충시간 <- as.POSIXct(tmp_df$액보충시간, origin="1899-12-30", tz="GMT")
+    
+    p <- ggplot(tmp_df, aes(x = Plates전류합)) +
+        geom_histogram(position = "identity", alpha = 0.2, bins = 50) + theme_bw() +
+        xlab("Plates전류합")
+    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time,"_전류"))
+    print(p)
+    
+    p <- ggplot(tmp_df, aes(x = anytime(Time) , y = Plates전류합)) + theme_bw() +
+        geom_line(position = "identity", alpha = 0.2, bins = 50) +
+        xlab("Time")+ylab("Plates전류합")+
+        geom_vline(data = tmp_df, aes(xintercept = 액보충시간)) +
+        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간")))
+    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time,"_전류"))
+    print(p)
+}
+
+for (loop in 1:length(File_Num)) {
+    cat(loop, "\n")
+     loop <- 1
+    tmp_df <- Merge_df %>% filter(File_num==loop)
+    Explosion_Cell <- unique(tmp_df$Item_No)
+    Explosion_Time <- unique(tmp_df$GROUP_endtime)
+    
+    tmp <- colSums(as.data.frame(lapply(tmp_df[,63:87], as.integer)) ,na.rm = FALSE, dims = 1) 
+    Explosion_Plate <- names(tmp[which(tmp>0)]);rm(tmp)
+    
+    tmp_df1 <- tmp_df[,c(1:5,31:55,56:58,62)]
+    tmp_df1 <- tmp_df1 %>% gather(Collector_num,Presure,Collector_압력_151:Collector_압력_175)
+    
+    tmp_df1$Num <- str_split_fixed(tmp_df1$Collector_num, fixed("_"), 3)[, 3]
+    tmp_df1$Collector_num <- NULL
+    
+    tmp_df2 <- tmp_df[,c(1:30,56:58,62)]
+    tmp_df2 <- tmp_df2 %>% gather(Plate_num,Current,Plate_전류_151:Plate_전류_175)
+    
+    tmp_df2$Num <- str_split_fixed(tmp_df2$Plate_num, fixed("_"), 3)[, 3]
+    tmp_df2$Plate_num <- NULL
+    
+    tmp_df <- merge(tmp_df1, tmp_df2, by = c("File_num","Item_No","연소여부","Time","전류","Plates전류합","액보충시간","GROUP_endtime","GROUP_starttime", "Num")) %>% 
+        arrange(Time);rm(tmp_df1,tmp_df2)
+    
+    tmp_df$Plate_num <- paste0("P_",tmp_df$Num)
+    tmp_df$Collector_num <- paste0("C_",tmp_df$Num)
+    tmp_df$Num <- NULL
+    
+    tmp_df$Time <- as.POSIXct(tmp_df$Time, origin="1899-12-30", tz="GMT")
+    tmp_df$액보충시간 <- as.POSIXct(tmp_df$액보충시간, origin="1899-12-30", tz="GMT")
+    
+    #연소발생 1시간전 상위Rank+최하Rank+연소 Plate 선별 Drawing
+    Flag_Time <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-1, unit="hours")
+    Tmp_df1 <- tmp_df %>% 
+        filter(Time == Flag_Time) %>% 
+        arrange(desc(Current)) %>% 
+        add_column(Rank=1:25,.before = 'Plate_num') %>% 
+        filter((Rank>=1 & Rank<=5)|Rank==25)
+    Select_Plate <- Tmp_df1$Plate_num;rm(Tmp_df1)
+    tmp_df <- tmp_df %>% filter(tmp_df[,'Plate_num'] %in% c(Select_Plate, Explosion_Plate))
+    
+    min_current <- min(tmp_df$Current, na.rm = T)
+    max_current <- max(tmp_df$Current, na.rm = T)
+    
+    min_pressure <- min(tmp_df$Presure, na.rm = T)
+    max_pressure <- max(tmp_df$Presure, na.rm = T)
+    
+    p <- ggplot(tmp_df,aes(x=Time,y=Current,group=Plate_num)) + ylim(min_current,max_current) +
+        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Plate_Current")
+    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
+        geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
+        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간")))
+    print(p)
+    
+    p <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
+        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure")
+    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
+        geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
+        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간")))
+    print(p)
+    
+
+    p <- ggplot(tmp_df, mapping = aes(x=Time,group=Plate_num)) +
+        geom_line(mapping = aes(y=Current, color=Plate_num)) +theme_bw()+ 
+        geom_line(aes(x=Time, y=Presure*2.5, color=Plate_num), inherit.aes = FALSE) +
+        geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
+        scale_y_continuous(
+            name = "Plate_Current",
+            sec.axis = sec_axis( ~. *1/2.5, name="Collector_Presure") 
+        ) +
+        ggtitle(paste0(Explosion_Cell,"_",Explosion_Time))
+    print(p)
+}
+
+```
