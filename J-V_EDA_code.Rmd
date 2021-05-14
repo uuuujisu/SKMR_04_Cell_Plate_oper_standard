@@ -8,21 +8,17 @@ output:
 ---
 
 ```{r setup, include=TRUE, cache=FALSE, message=FALSE, warning=FALSE, results='hide'}
- 
  knitr::opts_chunk$set(echo = TRUE)
 
-packages <- c("knitr", "stats", "dplyr","rmarkdown","tibble", "data.table","kableExtra","tidyr", "ggridges", "ggplot2", "anytime", "stringr", "patchwork")
-
-# invisible(lapply(packages, library, character.only = TRUE))
- if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
-install.packages('rmdformats')
-
+#packages <- c("knitr", "stats", "dplyr","rmarkdown","tibble", "data.table","tidyr", "ggridges", "ggplot2", "anytime", "stringr", "patchwork")
 #packages
- packages <- c("tidyr","tidyverse","dplyr", "knitr", "rmarkdown")
-install.packages(packages, dependencies = TRUE)
+ packages <- c("tidyr","tidyverse","dplyr", "knitr", "rmarkdown","anytime")
 
-lapply(packages, library, character.only = TRUE)
+#install.packages(packages, dependencies = TRUE)
+if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
+#install.packages('rmdformats')
 
+invisible(lapply(packages, library, character.only = TRUE))
 
 #directory - R_code
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
