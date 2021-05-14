@@ -146,6 +146,7 @@ for (fdr in 1: length(fdr.name)) {
         
     }   
     Explosion_Cell_total[fdr] <- Explosion_Cell
+#    폴더에 각 Cell 데이터 저장
 #    dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",Explosion_Cell,"_mindata.csv")
 #    write.csv(Explotion_Data_df,dirpath)
     
@@ -208,6 +209,7 @@ for (cell in Explosion_Cell_total[-11]){
         arrange(Time)
     
     dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",cell,"_mindata_explosion.csv")
+#    폴더에 각 cell의 merge data 저장
 #    write.csv(Merge_df,dirpath)
     
     
