@@ -1,5 +1,10 @@
 rm(list=ls())
 
+# > gc()
+# used (Mb) gc trigger  (Mb)  max used  (Mb)
+# Ncells 1289858 68.9    4173181 222.9   4173181 222.9
+# Vcells 3077419 23.5   75636104 577.1 102343823 780.9
+
 # environment -------------------------------------------------------------
 
 
@@ -48,10 +53,10 @@ fdr.name <- list.files()
 
 
 # 연소 전체 Cell에 대한 min data
-Explotion_Data_df <-  NULL
 File.num <- 0
 Explotion_total_Data_df <- NULL
 fdr.name
+
 for (fdr in 1: length(fdr.name)) {
 #fdr <- 29
     # 폴더의 fileList
@@ -66,7 +71,8 @@ for (fdr in 1: length(fdr.name)) {
     
     # J-v cell Tag name
     Tagname_df <-  N3_Tag_DF %>% filter(Item_No==Explosion_Cell)
-    
+
+    Explotion_Data_df <-  NULL    
  #   File.num <- 0
     # fdr 폴더 내 파일 읽어와서 full data 만드는 loop
     for(i in 1:length(fileList)){
@@ -144,11 +150,12 @@ for (fdr in 1: length(fdr.name)) {
         
     }   
     Explotion_total_Data_df <- rbind(Explotion_total_Data_df,Explotion_Data_df)
-    
+    Explotion_Data_df <- NULL
 #    dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",Explosion_Cell,"_mindata.csv")
 #    write.csv(Explotion_Data_df,dirpath)
     
 }
+gc()
 
 head(Explotion_total_Data_df)
 #write.csv(Explotion_total_Data_df,"../N3_20년_Cell_MinData_explosion/total_mindata.csv")
@@ -220,7 +227,7 @@ for (i in 1:nrow(Tmp_df)) {
 # 7개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음
 # 2개 : Item_No 소문자 i-AC, j-Y --------> 해결
 # 1개 : J-V 3/14 3/15 data 1로 통합되어있음
-# 1ro : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
+# 1개 : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
 
 N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
 
@@ -232,6 +239,10 @@ Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num
 #rm(Tmp_df, N3_Explosion_DF_tmp)
 
 #0.Data에 merge data 저장할 폴더 생성하고 wirte.csv
-#시간이 오래걸림...X
 dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.csv")
 #write.csv(Merge_df,dirpath)
+
+# > gc()
+# used  (Mb) gc trigger  (Mb)  max used  (Mb)
+# Ncells  1494537  79.9    4173181 222.9   4173181 222.9
+# Vcells 40551213 309.4   82484388 629.4 103061030 786.3
