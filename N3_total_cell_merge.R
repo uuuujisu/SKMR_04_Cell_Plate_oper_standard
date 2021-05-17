@@ -150,12 +150,10 @@ for (fdr in 1: length(fdr.name)) {
         
     }   
     Explotion_total_Data_df <- rbind(Explotion_total_Data_df,Explotion_Data_df)
-    Explotion_Data_df <- NULL
 #    dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",Explosion_Cell,"_mindata.csv")
 #    write.csv(Explotion_Data_df,dirpath)
     
 }
-gc()
 
 head(Explotion_total_Data_df)
 #write.csv(Explotion_total_Data_df,"../N3_20년_Cell_MinData_explosion/total_mindata.csv")
@@ -165,19 +163,38 @@ head(Explotion_total_Data_df)
 
 # data type numeric / factor
 Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라인_VV", "양극ProcessGas_VV"
-Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)] <- sapply(Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)], as.numeric)
 
 #숫자형 변수 바꿀때 문자형이 강제로 NA로 변환되는 warning
 #************데이터 밀려서 들어와있는것 확인 필요함 
 #N-3_RI_110N-4.csv 데이터 확인하면 304, 477, 1183, 1714, 1891 행이 밀려서 들어가있음. 3LICZI151N.PV tag 확인..
 
+# numeric 변수가 character 인 경우 있는지 확인하는 코드
+# tmp_numvar <- Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)]
+# str(tmp_numvar)
+# 
+# col_err <- c()
+# row <- c()
+# 
+# for (i in 1:ncol(tmp_numvar)){
+#     if(is.character(tmp_numvar[,i])==TRUE) {
+#         cat("character column is ",colnames(tmp_numvar)[i],"\n")
+#         col_err <- i
+#         for (j in 1:nrow(tmp_numvar)){
+#             row[j] <- (str_detect(tmp_numvar[j,i],"\\d") | is.na(tmp_numvar[j,i]) )
+#         }
+#             
+#     }
+#         
+# }
+# numvar_err <- Explotion_total_Data_df[row==FALSE,]
+# numvar_err    
+
+
+Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)] <- sapply(Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)], as.numeric)
 #Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))], as.factor) 
 #시간이 오래 걸려서 코드 변경
 Explotion_total_Data_df$연소여부 <- as.factor(Explotion_total_Data_df$연소여부)
 str(Explotion_total_Data_df)$연소여부
-
-# Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부","액투입라인_VV", "양극ProcessGas_VV"))], as.factor) 
-
 
 # plates 전류합 column 생성
 Explotion_total_Data_df$Plates전류합<-rowSums(Explotion_total_Data_df[,6:30], na.rm = TRUE)
@@ -223,11 +240,12 @@ for (i in 1:nrow(Tmp_df)) {
 }
 
 #File_num error 확인
-#N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
-# 7개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음
+N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
+# 8개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음 --------> 다시 수집
 # 2개 : Item_No 소문자 i-AC, j-Y --------> 해결
-# 1개 : J-V 3/14 3/15 data 1로 통합되어있음
+# 1개 : J-V 3/14 3/15 data 1로 통합되어있음 
 # 1개 : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
+# 1개 : I-V 폴더가 없음...
 
 N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
 
