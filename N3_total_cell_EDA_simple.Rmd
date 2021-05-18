@@ -343,6 +343,7 @@ cat(cell_name,"의 연소 건수",length(File_Num),"건","\n")
 
 for (loop in File_Num) {
     tmp_df <- Merge_df_tmp %>% filter(File_num==loop)
+    cat("연소발생일 : ",tmp_df$연소발생일[1])
     Explosion_Cell <- unique(tmp_df$Item_No)
     Explosion_Time <- unique(tmp_df$GROUP_endtime)
     
@@ -405,26 +406,6 @@ for (loop in File_Num) {
     
     min_pressure <- min(tmp_df$Presure, na.rm = T)
     max_pressure <- max(tmp_df$Presure, na.rm = T)
-
-    
-    p <- ggplot(tmp_df,aes(x=Time,y=Current,group=Plate_num)) + ylim(min_current,max_current) +
-        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Plate_Current")
-      
-    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
-        geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
-        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간"))) + 
-        labs(subtitle =  paste0("Explosion Plate is ",Explosion_Plate_total,"\n"))
-
-    print(p)
-    
-    p <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
-        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure")
-    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
-        geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
-        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간"))) + 
-        labs(subtitle =  paste0("Explosion Plate is ",Explosion_Plate_total,"\n"))
-    print(p)
-    
 
     p <- ggplot(tmp_df,aes(x=Time,y=Current,group=Plate_num)) + ylim(min_current,max_current) +
         geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Plate_Current") +
@@ -460,6 +441,7 @@ cat(cell_name,"의 연소 건수",length(File_Num),"건","\n")
 
 for (loop in File_Num) {
     tmp_df <- Merge_df_tmp %>% filter(File_num==loop)
+    cat("연소발생일 : ",tmp_df$연소발생일[1])
     Explosion_Cell <- unique(tmp_df$Item_No)
     Explosion_Time <- unique(tmp_df$GROUP_endtime)
     
@@ -522,24 +504,26 @@ for (loop in File_Num) {
     
     min_pressure <- min(tmp_df$Presure, na.rm = T)
     max_pressure <- max(tmp_df$Presure, na.rm = T)
-    
+
     p <- ggplot(tmp_df,aes(x=Time,y=Current,group=Plate_num)) + ylim(min_current,max_current) +
-        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Plate_Current")
+        geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Plate_Current") +
+        theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank())
       
     p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
         geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
         geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간"))) + 
         labs(subtitle =  paste0("Explosion Plate is ",Explosion_Plate_total,"\n"))
 
-    print(p)
     
-    p <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
+    q <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
         geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure")
-    p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_",Explosion_Time)) +
+    q <- q + coord_cartesian()+ 
         geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
-        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간"))) + 
-        labs(subtitle =  paste0("Explosion Plate is ",Explosion_Plate_total,"\n"))
-    print(p)
+        geom_text(data = tmp_df, aes(x = 액보충시간, y = 0, label = c("액보충시간"))) 
+    
+    grid.arrange(p,q,nrow=2)
+
+
 }
 
 ```
