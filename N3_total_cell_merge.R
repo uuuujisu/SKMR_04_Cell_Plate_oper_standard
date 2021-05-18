@@ -162,6 +162,7 @@ head(Explotion_total_Data_df)
 
 # preprocessing -----------------------------------------------------------
 
+
 # data type numeric / factor
 Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라인_VV", "양극ProcessGas_VV"
 
@@ -188,14 +189,14 @@ Column_name <- c("File_num", "Item_No", "연소여부", "Time") #, "액투입라
 #         
 # }
 # numvar_err <- Explotion_total_Data_df[row==FALSE,]
-# numvar_err    
+
 
 
 Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)] <- sapply(Explotion_total_Data_df[,-which(colnames(Explotion_total_Data_df)%in%Column_name)], as.numeric)
 #Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))] <- sapply(Explotion_total_Data_df[,which(colnames(Explotion_total_Data_df)%in%c("연소여부"))], as.factor) 
 #시간이 오래 걸려서 코드 변경
 Explotion_total_Data_df$연소여부 <- as.factor(Explotion_total_Data_df$연소여부)
-str(Explotion_total_Data_df)$연소여부
+#str(Explotion_total_Data_df)
 
 # plates 전류합 column 생성
 Explotion_total_Data_df$Plates전류합<-rowSums(Explotion_total_Data_df[,6:30], na.rm = TRUE)
@@ -212,11 +213,16 @@ Explotion_total_Data_df <- Explotion_total_Data_df %>%
 Explotion_total_Data_df$GROUP_endtime <- format(Explotion_total_Data_df$GROUP_endtime,format='%Y-%m-%d %H:%M')
 Explotion_total_Data_df$GROUP_starttime <- format(Explotion_total_Data_df$GROUP_starttime,format='%Y-%m-%d %H:%M')
 
+# data 양쪽에 빈칸 있는경우 있어서 없애는 function ex) "G-S" != "G-S "
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+Explotion_total_Data_df$Item_No <- trim(Explotion_total_Data_df$Item_No)
+N3_Explosion_DF$Item_No <- trim(N3_Explosion_DF$Item_No)
+
 # 연소 시간 요약
 Tmp_df <-  Explotion_total_Data_df %>% 
     group_by(File_num) %>%
     select(File_num, Item_No, GROUP_starttime, GROUP_endtime) %>%
-#    arrange(File_num) %>%
+    #    arrange(File_num) %>%
     ungroup
 Tmp_df <- Tmp_df[!duplicated(Tmp_df), ]
 
@@ -230,18 +236,19 @@ N3_Explosion_DF_tmp[,'Item_No'] <- toupper(N3_Explosion_DF_tmp[,'Item_No'])
 
 # file numbering loop
 # cell이 같으면서 폭발 날짜도 같은 것끼리 file number 붙이기
+
 for (i in 1:nrow(Tmp_df)) {
-    cat(i, "\n")
+    #    cat(i, "\n")
     for (j in 1:nrow(N3_Explosion_DF_tmp)) {
         if (substr(Tmp_df[i,'GROUP_endtime'],1,10) == substr(N3_Explosion_DF_tmp[j,'연소발생일'],1,10)
-            & Tmp_df[i,'Item_No'] == N3_Explosion_DF_tmp[j,'Item_No']) {
+            & Tmp_df[i,]$Item_No == N3_Explosion_DF_tmp[j,]$Item_No ){
             N3_Explosion_DF_tmp[j, 'File_num'] <- Tmp_df[i,'File_num']
         }
     }
 }
 
 #File_num error 확인
-N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
+#N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
 # 8개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음 --------> 다시 수집
 # 2개 : Item_No 소문자 i-AC, j-Y --------> 해결
 # 1개 : J-V 3/14 3/15 data 1로 통합되어있음 
@@ -259,11 +266,12 @@ N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ ,
 Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num", "Item_No")) %>% 
     arrange('File_num')
 
+
 #rm(Tmp_df, N3_Explosion_DF_tmp)
 
 #0.Data에 merge data 저장할 폴더 생성하고 wirte.csv
 dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.csv")
-#write.csv(Merge_df,dirpath)
+write.csv(Merge_df,dirpath)
 
 # > gc()
 # used  (Mb) gc trigger  (Mb)  max used  (Mb)
@@ -271,16 +279,16 @@ dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.cs
 # Vcells 40551213 309.4   82484388 629.4 103061030 786.3
 
 tmp <- NULL
-
+sum <- 0
 for (i in 1:length(Explosion_Cell_total)){
     
     cell_name <- Explosion_Cell_total[i]
     tmp <- Merge_df %>% filter(Item_No == cell_name)
     File_Num <- unique(tmp$File_num)
     cat(cell_name,"의 연소 건수",length(File_Num),"건","\n")
-    
+    sum <- sum+ length(File_Num)
 }
-
+print(sum)
 
 
 
