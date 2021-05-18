@@ -39,7 +39,7 @@ getwd()
 
 # N3 연소발생여부 데이터
 N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO.csv", header = TRUE))
-N3_Explosion_DF <- as.data.frame(sapply(N3_Explosion_DF, function(x) {ifelse(is.na(x),0,x)}))
+N3_Explosion_DF <- as.data.frame(sapply(N3_Explosion_DF, function(x) {ifelse(is.na(x)|x==3,0,x)}))
 
 # N3 Tag 데이터
 N3_Tag_DF <- as.data.frame(read.csv("N-3 Tag NO.csv", header = TRUE))
@@ -50,17 +50,16 @@ setwd("./N3_20년_Cell_MinData")
 # 폴더 list / 폴더 설정
 fdr.name <- list.files()
 
-
 # 연소 전체 Cell에 대한 min data
 File.num <- 0
 Explotion_total_Data_df <- NULL
+Explosion_Cell_total <- c()
 fdr.name
 
 for (fdr in 1: length(fdr.name)) {
-#fdr <- 29
+    #fdr <- 29
     # 폴더의 fileList
     fileList <- list.files(path=fdr.name[fdr])
-    cat("fdr.name is ",fdr.name[fdr],"\n")
     
     # 폴더 이름 str, 각각 마지막 글자 따서 cell 이름 출력
     Explosion_Cell <- NULL
@@ -70,15 +69,16 @@ for (fdr in 1: length(fdr.name)) {
     
     # J-v cell Tag name
     Tagname_df <-  N3_Tag_DF %>% filter(Item_No==Explosion_Cell)
-
+    
     Explotion_Data_df <-  NULL    
- #   File.num <- 0
+    #   File.num <- 0
     # fdr 폴더 내 파일 읽어와서 full data 만드는 loop
     for(i in 1:length(fileList)){
         # i <- 1
         tmp_df <-as.data.frame(read.csv(paste0(fdr.name[fdr],"/",fileList[i]),fill=TRUE,na.strings=c(NA,""),check.names=FALSE))  
         File.num <- File.num+1;
-        tmp_df <- cbind(File_num=File.num, tmp_df); flush.console;cat(fdr.name[fdr]," 의",i,"번째 파일\n")
+        tmp_df <- cbind(File_num=File.num, tmp_df); flush.console;
+        
         # Tag name 변수명 변경하는 loop
         for (j in 3:ncol(tmp_df)) {
             names(tmp_df)[j] <- return_CName_chr(Tagname_df,names(tmp_df)[j])
@@ -148,11 +148,13 @@ for (fdr in 1: length(fdr.name)) {
         Explotion_Data_df <- rbind(Explotion_Data_df,Tmp_DF)
         
     }   
+    Explosion_Cell_total[fdr] <- Explosion_Cell
     Explotion_total_Data_df <- rbind(Explotion_total_Data_df,Explotion_Data_df)
-#    dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",Explosion_Cell,"_mindata.csv")
-#    write.csv(Explotion_Data_df,dirpath)
+    #    dirpath <- paste0("../N3_20년_Cell_MinData_explosion/",Explosion_Cell,"_mindata.csv")
+    #    write.csv(Explotion_Data_df,dirpath)
     
 }
+
 
 head(Explotion_total_Data_df)
 #write.csv(Explotion_total_Data_df,"../N3_20년_Cell_MinData_explosion/total_mindata.csv")
@@ -248,6 +250,8 @@ N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
 
 ## G-H 폴더에 복사본 중복 데이터 있어서 삭제함.
 ## G-H 폴더에 N-3_RG-110H-1.csv N-3_RG-110H-2.csv 중복 
+## G-S 폴더에 1,2 파일 중복
+
 N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
 
 # J-V Cell 만 남은 'N3_Explosion_DF_tmp' 와 Explotion_total_Data_df를 join 함.
@@ -265,4 +269,18 @@ dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.cs
 # used  (Mb) gc trigger  (Mb)  max used  (Mb)
 # Ncells  1494537  79.9    4173181 222.9   4173181 222.9
 # Vcells 40551213 309.4   82484388 629.4 103061030 786.3
+
+tmp <- NULL
+
+for (i in 1:length(Explosion_Cell_total)){
+    
+    cell_name <- Explosion_Cell_total[i]
+    tmp <- Merge_df %>% filter(Item_No == cell_name)
+    File_Num <- unique(tmp$File_num)
+    cat(cell_name,"의 연소 건수",length(File_Num),"건","\n")
+    
+}
+
+
+
 
