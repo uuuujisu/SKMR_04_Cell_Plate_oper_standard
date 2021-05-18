@@ -9,11 +9,10 @@ rm(list=ls())
 
 
 #packages
-packages <- c("tidyr","tidyverse","dplyr")
+packages <- c("knitr", "stats", "dplyr","rmarkdown","tibble", "data.table","tidyr", "ggridges", "ggplot2", "anytime", "stringr", "patchwork","tidyverse")
 #install.packages(packages, dependencies = TRUE)
-
-lapply(packages, library, character.only = TRUE)
-
+invisible(lapply(packages, library, character.only = TRUE))
+if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
 
 #directory - R_code
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -247,12 +246,14 @@ N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
 # 1개 : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
 # 1개 : I-V 폴더가 없음...
 
+## G-H 폴더에 복사본 중복 데이터 있어서 삭제함.
+## G-H 폴더에 N-3_RG-110H-1.csv N-3_RG-110H-2.csv 중복 
 N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
 
 # J-V Cell 만 남은 'N3_Explosion_DF_tmp' 와 Explotion_total_Data_df를 join 함.
 # 액보충시간, cell 종류, 연소발생일월, plate 별 연소 여부 column 
 Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num", "Item_No")) %>% 
-    arrange(연소발생일)
+    arrange('File_num')
 
 #rm(Tmp_df, N3_Explosion_DF_tmp)
 
@@ -264,3 +265,4 @@ dirpath <- paste0("../N3_20년_Cell_MinData_explosion/total_mindata_explosion.cs
 # used  (Mb) gc trigger  (Mb)  max used  (Mb)
 # Ncells  1494537  79.9    4173181 222.9   4173181 222.9
 # Vcells 40551213 309.4   82484388 629.4 103061030 786.3
+
