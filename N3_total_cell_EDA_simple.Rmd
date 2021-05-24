@@ -17,7 +17,8 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages(packages, dependencies = TRUE)
 if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
 if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
-  #install.packages('rmdformats')
+
+   #install.packages('rmdformats')
 
 invisible(lapply(packages, library, character.only = TRUE))
 
