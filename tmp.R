@@ -263,13 +263,27 @@ Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num
   arrange('File_num')
 
 
+# graph color -------------------------------------------------------------
 
 
 #colors()
-pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
+#pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
 pie(rep(1,25),col=pltte1)
-#c("red","aquamarine","orange","magenta","darkgray","deepskyblue3","green","navy","tomato2","darkcyan","brown","forestgreen","magenta4","cyan","lightsalmon","palevioletred","slateblue","goldenrod1")
-#pltte2 <- colorRampPalette(brewer.pal(12, "Accent"))(25)
+pltte1 <- c(
+  "dodgerblue2", "#E31A1C", # red
+  "green4",
+  "#6A3D9A", # purple
+  "#FF7F00", # orange
+  "black", "gold1",
+  "skyblue2", "#FB9A99", # lt pink
+  "palegreen2",
+  "#CAB2D6", # lt purple
+  "#FDBF6F", # lt orange
+  "gray70", "khaki2",
+  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+  "darkturquoise", "green1", "yellow4", "yellow3",
+  "darkorange4", "brown"
+)
 
 color_P<- c("P_151"=	pltte1[1],
             "P_152"=	pltte1[2],
@@ -297,8 +311,13 @@ color_P<- c("P_151"=	pltte1[1],
             "P_174"=	pltte1[24],
             "P_175"=	pltte1[25])
 
+
+
+
+# graph loop --------------------------------------------------------------
+
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("./ggsave")
+setwd("../R_code/ggsave2")
 
 #aa <- Explosion_Cell_total[1]
 for (aa in Explosion_Cell_total[-c(13,24)]){
@@ -402,7 +421,8 @@ for (loop in File_Num) {
   r <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
     geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure") +
     guides(color = guide_legend(override.aes = list(size = 5))) +      
-    scale_color_manual(values=color_P)
+    scale_color_manual(values=color_P) +
+    theme(legend.position = "bottom")
 
   r <- r + coord_cartesian() +
     geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
@@ -413,15 +433,25 @@ for (loop in File_Num) {
   
   legend = gtable_filter(ggplot_gtable(ggplot_build(r)), "guide-box")
   
-  s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
-                                  r+theme(legend.position = 'none'),ncol=1),
-                    heights = c(1,2),ncol=1)
-  ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
+  ss <- grid.arrange(p,
+                     q+theme(legend.position='none'),
+                     r+theme(legend.position='none'),
+                     legend, heights = c(1,1,1,0.2),ncol=1)
+  # s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
+  #                                 r+theme(legend.position = 'none'),ncol=1),
+  #                   heights = c(1,2),ncol=1)
+  # ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
   #print(ss)
   
   ggsave(paste0(aa,"_grid_",loop,".jpg"),ss,height = 12)
   
 }
+
+
+
+
+# graph loop - 액보충시간 없음 ---------------------------------------------------
+# I-D, J-M cell
 
 }
 
@@ -526,7 +556,8 @@ for (aa in Explosion_Cell_total[c(13,24)]){
     r <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
       geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure") +
       guides(color = guide_legend(override.aes = list(size = 5))) +      
-      scale_color_manual(values=color_P)
+      scale_color_manual(values=color_P) +
+      theme(legend.position = "bottom")
     
     r <- r + coord_cartesian() +
       geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
@@ -537,10 +568,14 @@ for (aa in Explosion_Cell_total[c(13,24)]){
     
     legend = gtable_filter(ggplot_gtable(ggplot_build(r)), "guide-box")
     
-    s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
-                                    r+theme(legend.position = 'none'),ncol=1),
-                      heights = c(1,2),ncol=1)
-    ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
+    ss <- grid.arrange(p,
+                       q+theme(legend.position='none'),
+                       r+theme(legend.position='none'),
+                       legend, heights = c(1,1,1,0.2),ncol=1)
+    # s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
+    #                                 r+theme(legend.position = 'none'),ncol=1),
+    #                   heights = c(1,2),ncol=1)
+    # ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
     #print(ss)
     
     ggsave(paste0(aa,"_grid_",loop,".jpg"),ss,height = 12)
@@ -643,7 +678,8 @@ for (aa in Explosion_Cell_total[c(13,24)]){
     r <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
       geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure") +
       guides(color = guide_legend(override.aes = list(size = 5))) +      
-      scale_color_manual(values=color_P)
+      scale_color_manual(values=color_P) +
+      theme(legend.position = "bottom")
     
     r <- r + coord_cartesian() +
    #   geom_vline(data = tmp_df, aes(xintercept = 액보충시간))+
@@ -654,10 +690,14 @@ for (aa in Explosion_Cell_total[c(13,24)]){
     
     legend = gtable_filter(ggplot_gtable(ggplot_build(r)), "guide-box")
     
-    s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
-                                    r+theme(legend.position = 'none'),ncol=1),
-                      heights = c(1,2),ncol=1)
-    ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
+    ss <- grid.arrange(p,
+                       q+theme(legend.position='none'),
+                       r+theme(legend.position='none'),
+                       legend, heights = c(1,1,1,0.2),ncol=1)
+    # s <- grid.arrange(p,arrangeGrob(q+theme(legend.position='none'),
+    #                                 r+theme(legend.position = 'none'),ncol=1),
+    #                   heights = c(1,2),ncol=1)
+    # ss <- grid.arrange(s,legend,widths=c(1,0.15),ncol=2)
     #print(ss)
     
     ggsave(paste0(aa,"_grid_",loop,".jpg"),ss,height = 12)
