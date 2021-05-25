@@ -337,9 +337,24 @@ print(sum)
 
 #colors()
 pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
-#pie(rep(1,25),col=pltte1)
-#c("red","aquamarine","orange","magenta","darkgray","deepskyblue3","green","navy","tomato2","darkcyan","brown","forestgreen","magenta4","cyan","lightsalmon","palevioletred","slateblue","goldenrod1")
-#pltte2 <- colorRampPalette(brewer.pal(12, "Accent"))(25)
+pie(rep(1,25),col=pltte1)
+
+pltte2 <- c(
+  "dodgerblue2", "#E31A1C", # red
+  "green4",
+  "#6A3D9A", # purple
+  "#FF7F00", # orange
+  "black", "gold1",
+  "skyblue2", "#FB9A99", # lt pink
+  "palegreen2",
+  "#CAB2D6", # lt purple
+  "#FDBF6F", # lt orange
+  "gray70", "khaki2",
+  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+  "darkturquoise", "green1", "yellow4", "yellow3",
+  "darkorange4", "brown"
+)
+pie(rep(1, 25), col = pltte2)
 
 color_P<- c("P_151"=	pltte1[1],
           "P_152"=	pltte1[2],
