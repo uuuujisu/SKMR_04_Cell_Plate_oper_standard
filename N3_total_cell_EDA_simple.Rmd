@@ -17,8 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages(packages, dependencies = TRUE)
 if(!require(rmdformats)) install.packages('rmdformats'); require(rmdformats)
 if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
-
-   #install.packages('rmdformats')
+#install.packages('rmdformats')
 
 invisible(lapply(packages, library, character.only = TRUE))
 
@@ -26,8 +25,10 @@ invisible(lapply(packages, library, character.only = TRUE))
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-source("./Plot_lib.R")
-source("./R_function.R")
+#### function code 위치 수정 #######
+source("../R_code/Plot_lib.R")   ###
+source("../R_code/R_function.R") ###
+####################################
 
 return_CName_chr<-function(df1, Tag){
     for (i in 1:NCOL(df1)){
@@ -337,7 +338,7 @@ print(sum)
 
 #colors()
 pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
-pie(rep(1,25),col=pltte1)
+#pie(rep(1,25),col=pltte1)
 
 pltte2 <- c(
   "dodgerblue2", "#E31A1C", # red
@@ -354,7 +355,7 @@ pltte2 <- c(
   "darkturquoise", "green1", "yellow4", "yellow3",
   "darkorange4", "brown"
 )
-pie(rep(1, 25), col = pltte2)
+#pie(rep(1, 25), col = pltte2)
 
 color_P<- c("P_151"=	pltte1[1],
           "P_152"=	pltte1[2],
