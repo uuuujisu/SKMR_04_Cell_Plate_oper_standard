@@ -4,9 +4,9 @@ rm(list=ls())
 
 
 #packages
-packages <- c("dplyr","tidyr","tidyverse")
-#install.packages(packages, dependencies = TRUE)
-invisible(lapply(packages, library, character.only = TRUE))
+if(!require(dplyr)) install.packages('dplyr'); require(dplyr)
+if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
 if(!require(lubridate)) install.packages('lubridate'); require(lubridate)
 
 
@@ -63,7 +63,7 @@ for (fdr in 1: length(fdr.name)){
   File.num <- 0
   # fdr 폴더 내 파일 읽어와서 full data 만드는 loop
   for(i in 1:length(fileList)){
-#    i <- 1
+    
     tmp_df <-as.data.frame(read.csv(paste0(fdr.name[fdr],"/",fileList[i]),fill=TRUE,na.strings=c(NA,""),check.names=FALSE))  
     tmp_df <- cbind(File_num=File.num, tmp_df); flush.console;
     
@@ -76,7 +76,7 @@ for (fdr in 1: length(fdr.name)){
     tmp_df <- tmp_df %>% 
       add_column("Item_No" = Cell, .before = 'Time')
     Cell_df <- rbind(Cell_df,tmp_df)
-    File.num <- File.num+1;
+    File.num <- File.num + 1;
   }   
 
   Cell_total[fdr] <- Cell
@@ -113,8 +113,8 @@ for (i in 1:ncol(tmp_numvar)){
 numvar_err <- total_df[row==FALSE,];rm(tmp_numvar)
 
 #type 확인
-total_df[,-which(colnames(total_df)%in%Column_name)] <- sapply(total_df[,-which(colnames(total_df)%in%Column_name)], as.numeric)
 str(total_df)
+total_df[,-which(colnames(total_df)%in%Column_name)] <- sapply(total_df[,-which(colnames(total_df)%in%Column_name)], as.numeric)
 
 # Time format 변경
 total_df$Time <- as.POSIXct(total_df$Time, origin="1899-12-30", tz="GMT")
@@ -136,83 +136,51 @@ total_df[,'Item_No'] <- toupper(total_df[,'Item_No'])
 N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
+# save1 -------------------------------------------------------------------
+save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_Data.Rdata")
+rm(list=ls())
+
+
 
 # 04. other variables -----------------------------------------------------------
 
+dddd <- load(file="../N3_RData/total_df.Rdata")
 
 # plates 전류합 column 생성
 total_df$Plates전류합<-rowSums(total_df[,6:30], na.rm = TRUE)
 
-
 # 연소 별 endtime column 생성
-total_df <- total_df %>% 
+total_tmp <- total_df %>% 
   group_by(File_num,Item_No) %>% 
-  mutate(GROUP_endtime = max(Time)) %>%
+  mutate(GROUP_endtime = max(Time)) 
   ungroup
-total_df$GROUP_endtime <- format(total_df$GROUP_endtime,format='%Y-%m-%d %H:%M')
-
-
-# 연소 시간 요약
-total_tmp <-  total_df %>% 
-  group_by(Item_No,File_num) %>%
-  select(File_num, Item_No, GROUP_endtime) %>%
-  ungroup
-total_tmp <- total_tmp[!duplicated(total_tmp), ] %>%
-  mutate(Key=ymd_hm(GROUP_endtime)) 
+total_tmp <- total_tmp %>%
+  mutate(y_date = ymd_hm(GROUP_endtime))
 
 # N3 연소발생여부 data에서 Monel Type filtering
-N3_Explosion_DF <- N3_Explosion_DF %>%
-  mutate(연소여부="1")
-N3_Explosion_DF_tmp <- N3_Explosion_DF %>% 
-  filter(Cell종류=="Monel") %>%
-  mutate(Key=ymd_hm(연소발생일)) 
+N3_Explosion_tmp <- N3_Explosion_DF %>%
+  mutate(y=1, y_date=ymd_hm(연소발생일),액보충시간=ymd_hm(액보충시간)) %>% 
+  filter(Cell종류=="Monel") %>% 
+  select(-c('연소발생월','연소발생일','Cell종류')) 
 
 
 # file numbering loop
-# cell이 같으면서 폭발 날짜도 같은 것끼리 붙이기
+# cell, y_date 같은 것끼리 붙이기
 
-merge_tmp <- merge(total_tmp, N3_Explosion_DF_tmp,
-                   by.x = c('Item_No','Key'), by.y = c('Item_No', 'Key'), all.x = TRUE) %>% 
-  select(-c('연소발생월','연소발생일','Cell종류','액보충시간'))
+merge_df <- merge(total_tmp, N3_Explosion_tmp,
+                   by= c('Item_No','y_date'), all.x = TRUE) 
+merge_df[,70:95] <-  sapply(merge_df[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
 
+final_df <- merge_df  %>%
+  select(c('File_num','Item_No','y_date','y',everything())) %>% 
+  arrange('File_num','Item_No','Time')
 
-
-# for (i in 1:nrow(total_tmp)) {
-#   for (j in 1:nrow(N3_Explosion_DF_tmp)) {
-#     if (substr(total_tmp[i,'GROUP_endtime'],1,10) == substr(N3_Explosion_DF_tmp[j,'연소발생일'],1,10)
-#         & total_tmp[i,]$Item_No == N3_Explosion_DF_tmp[j,]$Item_No ){
-#       N3_Explosion_DF_tmp[j, 'File_num'] <- total_tmp[i,'File_num']
-#     }
-#   }
-# }
-
-#File_num error 확인
-#N3_Explosion_DF_tmp[is.na(N3_Explosion_DF_tmp[,'File_num']),]
-# 8개 : N3_20년_MinData I-AC 폴더에 다른 data가 들어가있음 --------> 다시 수집
-# 2개 : Item_No 소문자 i-AC, j-Y --------> 해결
-# 1개 : J-V 3/14 3/15 data 1로 통합되어있음 
-# 1개 : G-S 데이터 N-3_RG-110S-1.csv 와 N-3_RG-110S-0.csv data 중복
-# 1개 : I-V 폴더가 없음...
-
-## G-H 폴더에 복사본 중복 데이터 있어서 삭제함.
-## G-H 폴더에 N-3_RG-110H-1.csv N-3_RG-110H-2.csv 중복 
-## G-S 폴더에 1,2 파일 중복
-
-merge_tmp <- merge_tmp[complete.cases(merge_tmp[,c('연소여부')]),]
-N3_Explosion_DF_tmp <- N3_Explosion_DF_tmp[complete.cases(N3_Explosion_DF_tmp[ , c('File_num')]),]
-
-# J-V Cell 만 남은 'N3_Explosion_DF_tmp' 와 total_df를 join 함.
-# 액보충시간, cell 종류, 연소발생일월, plate 별 연소 여부 column 
-Merge_df <- merge(total_df, N3_Explosion_DF_tmp, by = c("File_num", "Item_No")) %>% 
-  arrange('File_num')
+str(final_df)
 
 
-
-# dirpath <- "../N3_RData/total_df.Rdata"
-# save(total_df, N3_Explosion_DF, file = dirpath);rm(list=ls())
-# dddd <- load(file=dirpath)
-
-
+# save2 -------------------------------------------------------------------
+save(final_df,file = "../N3_RData/final_Data.Rdata")
+rm(list=ls())
 
 
 
