@@ -41,7 +41,6 @@ fdr.name <- list.files()
 # 연소/비연소 전체 Cell에 대한 min data
 File.num <- 0
 total_df <- NULL
-Cell_total <- c()
 #fdr <- 11
 
 for (fdr in 1: length(fdr.name)){
@@ -79,7 +78,6 @@ for (fdr in 1: length(fdr.name)){
     File.num <- File.num + 1;
   }   
 
-  Cell_total[fdr] <- Cell
   total_df <- rbind(total_df,Cell_df)
 
 }
@@ -121,7 +119,6 @@ total_df$Time <- as.POSIXct(total_df$Time, origin="1899-12-30", tz="GMT")
 total_df$Time <- format(total_df$Time,format='%Y-%m-%d %H:%M')
 
 
-
 # 03. data cleaning -----------------------------------------------------------
 
 
@@ -141,10 +138,10 @@ save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_Data.Rdata")
 rm(list=ls())
 
 
+# 04. final data ----------------------------------------------------------
 
-# 04. other variables -----------------------------------------------------------
 
-dddd <- load(file="../N3_RData/total_df.Rdata")
+dddd <- load(file="../N3_RData/pre_Data.Rdata")
 
 # plates 전류합 column 생성
 total_df$Plates전류합<-rowSums(total_df[,6:30], na.rm = TRUE)
@@ -152,10 +149,11 @@ total_df$Plates전류합<-rowSums(total_df[,6:30], na.rm = TRUE)
 # 연소 별 endtime column 생성
 total_tmp <- total_df %>% 
   group_by(File_num,Item_No) %>% 
-  mutate(GROUP_endtime = max(Time)) 
+  mutate(GROUP_endtime = max(Time)) %>%
   ungroup
 total_tmp <- total_tmp %>%
-  mutate(y_date = ymd_hm(GROUP_endtime))
+  mutate(y_date = ymd_hm(GROUP_endtime)) %>% 
+  mutate(Time = ymd_hm(Time))
 
 # N3 연소발생여부 data에서 Monel Type filtering
 N3_Explosion_tmp <- N3_Explosion_DF %>%
@@ -167,11 +165,11 @@ N3_Explosion_tmp <- N3_Explosion_DF %>%
 # file numbering loop
 # cell, y_date 같은 것끼리 붙이기
 
-merge_df <- merge(total_tmp, N3_Explosion_tmp,
+merge_tmp <- merge(total_tmp, N3_Explosion_tmp,
                    by= c('Item_No','y_date'), all.x = TRUE) 
-merge_df[,70:95] <-  sapply(merge_df[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
+merge_tmp[,70:95] <-  sapply(merge_tmp[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
 
-final_df <- merge_df  %>%
+final_df <- merge_tmp  %>%
   select(c('File_num','Item_No','y_date','y',everything())) %>% 
   arrange('File_num','Item_No','Time')
 
@@ -180,8 +178,20 @@ str(final_df)
 
 # save2 -------------------------------------------------------------------
 save(final_df,file = "../N3_RData/final_Data.Rdata")
-rm(list=ls())
+#rm(list=ls())
 
 
 
+# 데이터 확인 ------------------------------------------------------------------
 
+tmp <- final_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
+tmp <- tmp[!duplicated(tmp), ] %>%
+  arrange(File_num)
+
+sss <-sum(as.numeric(tmp$y))
+
+aaa <- tmp %>%
+  group_by(File_num) %>%
+  mutate(aa = sum(as.numeric(y))) %>%
+  select(c('File_num','aa'))
+aaa <- aaa[!duplicated(aaa), ]
