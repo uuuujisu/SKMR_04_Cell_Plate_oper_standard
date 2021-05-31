@@ -19,6 +19,9 @@ source("../R_code/R_function.R")
 
 
 
+# (N3 °øÀå) -------------------------------------------------------------------
+
+
 # 01. make total data ---------------------------------------------------------
 
 #directory - DATA
@@ -139,7 +142,7 @@ total_df[,'Item_No'] <- toupper(total_df[,'Item_No'])
 N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
-# save1 -------------------------------------------------------------------
+# (save1) -------------------------------------------------------------------
 save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_data.Rdata")
 rm(list=ls())
 
@@ -182,7 +185,7 @@ final_df <- merge_tmp  %>%
 str(final_df)
 
 
-# save2 -------------------------------------------------------------------
+# (save2) -------------------------------------------------------------------
 save(final_df,file = "../N3_RData/final_data.Rdata")
 #rm(list=ls())
 
@@ -203,3 +206,5 @@ aaa <- tmp %>%
   mutate(aa = sum(as.numeric(y))) %>%
   select(c('File_num','aa'))
 aaa <- aaa[!duplicated(aaa), ]
+
+tmp <- unique(tmp[which(time_df$y=="1"),c('File_num','Item_No',)])
