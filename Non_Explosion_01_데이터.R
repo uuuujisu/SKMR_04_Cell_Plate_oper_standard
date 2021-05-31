@@ -188,7 +188,7 @@ str(total_df)
 
 # (save2) -------------------------------------------------------------------
 save(total_df,file = "../N3_RData/total_data.Rdata")
-#rm(list=ls())
+rm(list=ls())
 
 
 

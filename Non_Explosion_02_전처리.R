@@ -43,7 +43,7 @@ for (i in 1:length(Err_File_num)){
                      | Item_No != Err_Item_No[i])
 }
 
-#data save
+  #data save
 prep01_df <- total_df
 save(prep01_df,file = "../0.Data/N3_RData/prep01_data.Rdata")
 
