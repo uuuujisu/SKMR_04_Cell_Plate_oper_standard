@@ -41,7 +41,10 @@ fdr.name <- list.files()
 # 연소/비연소 전체 Cell에 대한 min data
 File.num <- 0
 total_df <- NULL
-#fdr <- 11
+
+# fdr <- 19
+# I-U cell 양극ProcessGas_VV tag 오류로 해당변수 삭제
+# total_df <- total_df[,-65]
 
 for (fdr in 1: length(fdr.name)){
   # 폴더의 fileList / order
@@ -74,6 +77,9 @@ for (fdr in 1: length(fdr.name)){
     #tibble package
     tmp_df <- tmp_df %>% 
       add_column("Item_No" = Cell, .before = 'Time')
+    # I-U cell 양극ProcessGas_VV tag 오류로 해당변수 삭제
+    tmp_df <- tmp_df[,-65]
+    
     Cell_df <- rbind(Cell_df,tmp_df)
     File.num <- File.num + 1;
   }   
@@ -93,7 +99,7 @@ Column_name <- c("Item_No", "Time", "액투입라인_VV", "양극ProcessGas_VV")
 
 #numeric 변수가 character 인 경우 있는지 확인하는 코드 
 tmp_numvar <- total_df[,-which(colnames(total_df)%in%Column_name)]
-str(tmp_numvar)
+str(tmp_numvar) #all numeric
 
 col_err <- c()
 row <- c()
@@ -112,7 +118,7 @@ numvar_err <- total_df[row==FALSE,];rm(tmp_numvar)
 
 #type 확인
 str(total_df)
-total_df[,-which(colnames(total_df)%in%Column_name)] <- sapply(total_df[,-which(colnames(total_df)%in%Column_name)], as.numeric)
+#total_df[,-which(colnames(total_df)%in%Column_name)] <- sapply(total_df[,-which(colnames(total_df)%in%Column_name)], as.numeric)
 
 # Time format 변경
 total_df$Time <- as.POSIXct(total_df$Time, origin="1899-12-30", tz="GMT")
@@ -134,14 +140,14 @@ N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
 # save1 -------------------------------------------------------------------
-save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_Data.Rdata")
+save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_data.Rdata")
 rm(list=ls())
 
 
 # 04. final data ----------------------------------------------------------
 
 
-dddd <- load(file="../N3_RData/pre_Data.Rdata")
+dddd <- load(file="../N3_RData/pre_data.Rdata")
 
 # plates 전류합 column 생성
 total_df$Plates전류합<-rowSums(total_df[,6:30], na.rm = TRUE)
@@ -167,7 +173,7 @@ N3_Explosion_tmp <- N3_Explosion_DF %>%
 
 merge_tmp <- merge(total_tmp, N3_Explosion_tmp,
                    by= c('Item_No','y_date'), all.x = TRUE) 
-merge_tmp[,70:95] <-  sapply(merge_tmp[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
+merge_tmp[,69:94] <-  sapply(merge_tmp[,69:94], function(x) {ifelse(is.na(x),0,x)}) 
 
 final_df <- merge_tmp  %>%
   select(c('File_num','Item_No','y_date','y',everything())) %>% 
@@ -177,12 +183,14 @@ str(final_df)
 
 
 # save2 -------------------------------------------------------------------
-save(final_df,file = "../N3_RData/final_Data.Rdata")
+save(final_df,file = "../N3_RData/final_data.Rdata")
 #rm(list=ls())
 
 
 
 # 데이터 확인 ------------------------------------------------------------------
+
+load(file="D:/NF3연소 사전감지 과제/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/final_data.Rdata")
 
 tmp <- final_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
 tmp <- tmp[!duplicated(tmp), ] %>%
