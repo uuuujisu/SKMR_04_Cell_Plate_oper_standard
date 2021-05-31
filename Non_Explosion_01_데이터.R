@@ -22,7 +22,9 @@ source("../R_code/R_function.R")
 # (N3 공장) -------------------------------------------------------------------
 
 
-# 01. make total data ---------------------------------------------------------
+
+# 01. raw data ------------------------------------------------------------
+
 
 #directory - DATA
 setwd("../0.Data")
@@ -43,11 +45,11 @@ fdr.name <- list.files()
 
 # 연소/비연소 전체 Cell에 대한 min data
 File.num <- 0
-total_df <- NULL
+raw_df <- NULL
 
 # fdr <- 19
 # I-U cell 양극ProcessGas_VV tag 오류로 해당변수 삭제
-# total_df <- total_df[,-65]
+# raw_df <- raw_df[,-65]
 
 for (fdr in 1: length(fdr.name)){
   # 폴더의 fileList / order
@@ -87,11 +89,11 @@ for (fdr in 1: length(fdr.name)){
     File.num <- File.num + 1;
   }   
 
-  total_df <- rbind(total_df,Cell_df)
+  raw_df <- rbind(raw_df,Cell_df)
 
 }
 
-head(total_df)
+head(raw_df)
 
 
 # 02. var type - numeric/ factor/ time ----------------------------------------
@@ -101,7 +103,7 @@ head(total_df)
 Column_name <- c("Item_No", "Time", "액투입라인_VV", "양극ProcessGas_VV")
 
 #numeric 변수가 character 인 경우 있는지 확인하는 코드 
-tmp_numvar <- total_df[,-which(colnames(total_df)%in%Column_name)]
+tmp_numvar <- raw_df[,-which(colnames(raw_df)%in%Column_name)]
 str(tmp_numvar) #all numeric
 
 col_err <- c()
@@ -117,15 +119,15 @@ for (i in 1:ncol(tmp_numvar)){
     
   }
 }
-numvar_err <- total_df[row==FALSE,];rm(tmp_numvar)
+numvar_err <- raw_df[row==FALSE,];rm(tmp_numvar)
 
 #type 확인
-str(total_df)
-#total_df[,-which(colnames(total_df)%in%Column_name)] <- sapply(total_df[,-which(colnames(total_df)%in%Column_name)], as.numeric)
+str(raw_df)
+#raw_df[,-which(colnames(raw_df)%in%Column_name)] <- sapply(raw_df[,-which(colnames(raw_df)%in%Column_name)], as.numeric)
 
 # Time format 변경
-total_df$Time <- as.POSIXct(total_df$Time, origin="1899-12-30", tz="GMT")
-total_df$Time <- format(total_df$Time,format='%Y-%m-%d %H:%M')
+raw_df$Time <- as.POSIXct(raw_df$Time, origin="1899-12-30", tz="GMT")
+raw_df$Time <- format(raw_df$Time,format='%Y-%m-%d %H:%M')
 
 
 # 03. data cleaning -----------------------------------------------------------
@@ -133,34 +135,33 @@ total_df$Time <- format(total_df$Time,format='%Y-%m-%d %H:%M')
 
 # data 양쪽에 빈칸 있는경우 있어서 없애는 function ex) "G-S" != "G-s "
 trim <- function (x) gsub("^\\s+|\\s+$", "", x)
-total_df$Item_No <- trim(total_df$Item_No)
+raw_df$Item_No <- trim(raw_df$Item_No)
 N3_Explosion_DF$Item_No <- trim(N3_Explosion_DF$Item_No)
 
 
 # cell 이름 소문자를 대문자로 변환
-total_df[,'Item_No'] <- toupper(total_df[,'Item_No'])
+raw_df[,'Item_No'] <- toupper(raw_df[,'Item_No'])
 N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
 # (save1) -------------------------------------------------------------------
-save(total_df,N3_Explosion_DF, file = "../N3_RData/pre_data.Rdata")
+save(raw_df,N3_Explosion_DF, file = "../N3_RData/raw_data.Rdata")
 rm(list=ls())
 
 
-# 04. final data ----------------------------------------------------------
+# 04. total data ----------------------------------------------------------
 
-
-dddd <- load(file="../N3_RData/pre_data.Rdata")
+dddd <- load(file="../N3_RData/raw_data.Rdata")
 
 # plates 전류합 column 생성
-total_df$Plates전류합<-rowSums(total_df[,6:30], na.rm = TRUE)
+raw_df$Plates전류합<-rowSums(raw_df[,6:30], na.rm = TRUE)
 
 # 연소 별 endtime column 생성
-total_tmp <- total_df %>% 
+raw_tmp <- raw_df %>% 
   group_by(File_num,Item_No) %>% 
   mutate(GROUP_endtime = max(Time)) %>%
   ungroup
-total_tmp <- total_tmp %>%
+raw_tmp <- raw_tmp %>%
   mutate(y_date = ymd_hm(GROUP_endtime)) %>% 
   mutate(Time = ymd_hm(Time))
 
@@ -174,28 +175,28 @@ N3_Explosion_tmp <- N3_Explosion_DF %>%
 # file numbering loop
 # cell, y_date 같은 것끼리 붙이기
 
-merge_tmp <- merge(total_tmp, N3_Explosion_tmp,
+merge_tmp <- merge(raw_tmp, N3_Explosion_tmp,
                    by= c('Item_No','y_date'), all.x = TRUE) 
 merge_tmp[,69:94] <-  sapply(merge_tmp[,69:94], function(x) {ifelse(is.na(x),0,x)}) 
 
-final_df <- merge_tmp  %>%
+total_df <- merge_tmp  %>%
   select(c('File_num','Item_No','y_date','y',everything())) %>% 
   arrange('File_num','Item_No','Time')
 
-str(final_df)
+str(total_df)
 
 
 # (save2) -------------------------------------------------------------------
-save(final_df,file = "../N3_RData/final_data.Rdata")
+save(total_df,file = "../N3_RData/total_data.Rdata")
 #rm(list=ls())
 
 
 
 # 데이터 확인 ------------------------------------------------------------------
 
-load(file="D:/NF3연소 사전감지 과제/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/final_data.Rdata")
+load(file="D:/NF3연소 사전감지 과제/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 
-tmp <- final_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
+tmp <- total_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
 tmp <- tmp[!duplicated(tmp), ] %>%
   arrange(File_num)
 
