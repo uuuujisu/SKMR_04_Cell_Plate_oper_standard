@@ -12,17 +12,19 @@ if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-#functions
-source("../R_code/Plot_lib.R")
-source("../R_code/R_function.R")
 
 #Rdata load
 load(file="../0.Data/N3_RData/prep01_data.Rdata")
+summary(prep01_df)
 
 
+# Plates summary 변수 -------------------------------------------------------
+rowM
 
-# 연소/비연소 비교해보기.. ----------------------------------------------------------
+IRs <- colnames(prep01_df)[7:31]
+PIs <- colnames[]
 
+smr_df <- prep01_df %>% filter(File_num==0) %>% select(colnames(prep01_df)[1:6])
 
 
 # 

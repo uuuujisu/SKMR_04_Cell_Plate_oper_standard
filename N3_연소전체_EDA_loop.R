@@ -19,8 +19,8 @@ if(!require(gtable)) install.packages('gtable'); require(gtable)
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-source("./Plot_lib.R")
-source("./R_function.R")
+source("../R_code/Plot_lib.R")
+source("../R_code/R_function.R")
 
 
 
@@ -260,23 +260,23 @@ Merge_df <- merge(Explotion_total_Data_df, N3_Explosion_DF_tmp, by = c("File_num
 
 
 #colors()
-#pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
+pltte1 <- colorRampPalette(c("red","deepskyblue","forestgreen","gray","blue","orange","magenta"))(25)
 pie(rep(1,25),col=pltte1)
-pltte1 <- c(
-  "dodgerblue2", "#E31A1C", # red
-  "green4",
-  "#6A3D9A", # purple
-  "#FF7F00", # orange
-  "black", "gold1",
-  "skyblue2", "#FB9A99", # lt pink
-  "palegreen2",
-  "#CAB2D6", # lt purple
-  "#FDBF6F", # lt orange
-  "gray70", "khaki2",
-  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
-  "darkturquoise", "green1", "yellow4", "yellow3",
-  "darkorange4", "brown"
-)
+# pltte1 <- c(
+#   "dodgerblue2", "#E31A1C", # red
+#   "green4",
+#   "#6A3D9A", # purple
+#   "#FF7F00", # orange
+#   "black", "gold1",
+#   "skyblue2", "#FB9A99", # lt pink
+#   "palegreen2",
+#   "#CAB2D6", # lt purple
+#   "#FDBF6F", # lt orange
+#   "gray70", "khaki2",
+#   "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+#   "darkturquoise", "green1", "yellow4", "yellow3",
+#   "darkorange4", "brown"
+# )
 
 color_P<- c("P_151"=	pltte1[1],
             "P_152"=	pltte1[2],

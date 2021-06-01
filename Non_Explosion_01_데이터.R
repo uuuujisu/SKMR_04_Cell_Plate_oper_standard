@@ -145,13 +145,13 @@ N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
 # (save1) -------------------------------------------------------------------
-save(raw_df,N3_Explosion_DF, file = "../N3_RData/raw_data.Rdata")
+save(raw_df,N3_Explosion_DF, file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 rm(list=ls())
 
 
 # 04. total data ----------------------------------------------------------
 
-dddd <- load(file="../N3_RData/raw_data.Rdata")
+dddd <- load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 
 # plates 전류합 column 생성
 raw_df$Plates전류합<-rowSums(raw_df[,6:30], na.rm = TRUE)
@@ -159,6 +159,7 @@ raw_df$Plates전류합<-rowSums(raw_df[,6:30], na.rm = TRUE)
 # 연소 별 endtime column 생성
 raw_tmp <- raw_df %>% 
   group_by(File_num,Item_No) %>% 
+  mutate(GROUP_starttime = min(Time)) %>%
   mutate(GROUP_endtime = max(Time)) %>%
   ungroup
 raw_tmp <- raw_tmp %>%
@@ -177,7 +178,7 @@ N3_Explosion_tmp <- N3_Explosion_DF %>%
 
 merge_tmp <- merge(raw_tmp, N3_Explosion_tmp,
                    by= c('Item_No','y_date'), all.x = TRUE) 
-merge_tmp[,69:94] <-  sapply(merge_tmp[,69:94], function(x) {ifelse(is.na(x),0,x)}) 
+merge_tmp[,70:95] <-  sapply(merge_tmp[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
 
 total_df <- merge_tmp  %>%
   select(c('File_num','Item_No','y_date','y',everything())) %>% 
@@ -187,14 +188,14 @@ str(total_df)
 
 
 # (save2) -------------------------------------------------------------------
-save(total_df,file = "../N3_RData/total_data.Rdata")
+save(total_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 rm(list=ls())
 
 
 
 # 데이터 확인 ------------------------------------------------------------------
 
-load(file="D:/NF3연소 사전감지 과제/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
+load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 
 tmp <- total_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
 tmp <- tmp[!duplicated(tmp), ] %>%
