@@ -79,7 +79,7 @@ setwd("D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/graph")
 
 time_df <- NULL
 
-for (i in 31:62){
+for (i in 31:42){
 
 time_df <- prep01_df %>%
   filter(File_num==i)
@@ -274,7 +274,6 @@ for( aa in Non_Explosion_Cell){
   ggsave(paste0("./",i,"/비연소_",aa,".jpg"),ss,width = 5, height = 10)
 }
 
-rm(time_df,tmp_df,tmp_df1,tmp_df2,p,q,r,s,legend)
 }
 
 # 
