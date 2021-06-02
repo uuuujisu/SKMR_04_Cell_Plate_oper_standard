@@ -276,31 +276,4 @@ for( aa in Non_Explosion_Cell){
 
 }
 
-# 
-# #연소 Cell 전류합
-# 
-# tmp_df <- time_df %>% filter(Item_No==Explosion_Cell)
-# 
-# p <- ggplot(tmp_df, aes(x = anytime(Time) , y = Plates전류합)) + theme_bw() +
-#   geom_line(position = "identity", alpha = 0.2, color='black',size=1) +
-#   xlab("Time")+ylab("Plates전류합")+
-#   geom_vline(data = tmp_df, aes(xintercept = y_date),color="red")
-# p <- p + coord_cartesian()+ ggtitle(paste0(Explosion_Cell,"_연소_",Explosion_Time,"_전류"))
-# print(p)
-# 
-# q <- ggplot(tmp_df,aes(x=Time,y=Current,group=Plate_num)) + ylim(min_current,max_current) +
-#   geom_line(aes(color=Plate_num))+xlab("Time")+ylab("전류") +
-#   guides(color = guide_legend(override.aes = list(size = 5))) +
-#   scale_color_manual(values=color_P)+
-#   theme(legend.position = "none")
-# 
-# 
-# print(q)
-# 
-# r <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
-#   geom_line(aes(color=Plate_num))+xlab("Time")+ylab("압력") +
-#   guides(color = guide_legend(override.aes = list(size = 5))) +      
-#   scale_color_manual(values=color_P) +
-#   theme(legend.position = "none")
-
 
