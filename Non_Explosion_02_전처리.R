@@ -40,16 +40,18 @@ for (i in 1:length(Err_File_num)){
 }
 
 
-
-
 #data save
 prep01_df <- total_df
 save(prep01_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/prep01_data.Rdata")
 
-# 02.  --------------------------------------------------------------------
+# 02. 데이터 추출 오류 파일 삭제 --------------------------------------------------------------------
 
+# N-3_RI-110A-58.csv 데이터 에러
+# 7,635,901 -> 7,634,136
 
+prep02_df <- prep01_df %>% filter(File_num!=58 | Item_No != "I-A" )
 
+save(prep02_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/prep02_data.Rdata")
 
 
 

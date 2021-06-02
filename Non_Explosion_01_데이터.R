@@ -195,18 +195,18 @@ rm(list=ls())
 
 # 데이터 확인 ------------------------------------------------------------------
 
-load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
-
-tmp <- total_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
-tmp <- tmp[!duplicated(tmp), ] %>%
-  arrange(File_num)
-
-sss <-sum(as.numeric(tmp$y))
-
-aaa <- tmp %>%
-  group_by(File_num) %>%
-  mutate(aa = sum(as.numeric(y))) %>%
-  select(c('File_num','aa'))
-aaa <- aaa[!duplicated(aaa), ]
-
-tmp <- unique(tmp[which(time_df$y=="1"),c('File_num','Item_No',)])
+# load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
+# 
+# tmp <- total_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
+# tmp <- tmp[!duplicated(tmp), ] %>%
+#   arrange(File_num)
+# 
+# sss <-sum(as.numeric(tmp$y))
+# 
+# aaa <- tmp %>%
+#   group_by(File_num) %>%
+#   mutate(aa = sum(as.numeric(y))) %>%
+#   select(c('File_num','aa'))
+# aaa <- aaa[!duplicated(aaa), ]
+# 
+# tmp <- unique(tmp[which(time_df$y=="1"),c('File_num','Item_No',)])

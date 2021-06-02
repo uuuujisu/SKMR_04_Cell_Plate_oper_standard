@@ -79,7 +79,8 @@ setwd("D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/graph")
 
 time_df <- NULL
 
-for (i in 31:42){
+
+for (i in 0:89){
 
 time_df <- prep01_df %>%
   filter(File_num==i)
@@ -171,7 +172,7 @@ q <- q + coord_cartesian() +
   geom_vline(data = tmp_df, aes(xintercept = y_date),color="red") + 
   labs(subtitle =  paste0("연소 플레이트 : ",Explosion_Plate_total,"\n")) 
 
-print(q)
+#print(q)
 
 r <- ggplot(tmp_df,aes(x=Time,y=Presure,group=Plate_num)) + ylim(min_pressure,max_pressure) +
   geom_line(aes(color=Plate_num))+xlab("Time")+ylab("Collector_Presure") +
@@ -184,7 +185,7 @@ r <- r + coord_cartesian() +
   geom_text(data = tmp_df, aes(x = 액보충시간, y = min_pressure, label = c("액보충시간")))  +
   geom_vline(data = tmp_df, aes(xintercept = y_date),color="red") 
 
-print(r)
+#print(r)
 
 legend = gtable_filter(ggplot_gtable(ggplot_build(r)), "guide-box")
 ss <- grid.arrange(p,legend,
@@ -192,11 +193,13 @@ ss <- grid.arrange(p,legend,
                    r+theme(legend.position='none'),
                    heights = c(1,0.2,1,1),ncol=1)
 
-print(ss)
+#print(ss)
 
 ggsave(paste0("./",i,"/연소_",Explosion_Cell,".jpg"),ss,width = 5, height = 10)
 
 #비연소 Cell
+# aa <- "I-A"
+# N-3_RI-110A-58.csv 데이터 에러
 
 for( aa in Non_Explosion_Cell){
   tmp_df <- time_df %>% filter(Item_No==aa)
