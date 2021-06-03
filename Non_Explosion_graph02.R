@@ -49,12 +49,44 @@ for (i in 0:89){
   hist(tmp2$Z.IR_Plates_mean,breaks=1000)
   
   
+  tmp <- info_df[!is.na(info_df$IR_Plates_mean),]
+  
+  tmp1 <- tmp %>% filter(y=="1")
+  hist(tmp1$IR_Plates_mean,breaks=1000)
+  
+  tmp2 <- tmp %>% filter(y!="1" )
+  hist(tmp2$IR_Plates_mean,breaks=1000)
+  
+  
 
   
+  tmp <- info_df[!is.na(info_df$Z.PI_Plates_mean),]
+  
+  tmp1 <- tmp %>% filter(y=="1")
+  hist(tmp1$Z.PI_Plates_mean,breaks=1000)
+  
+  tmp2 <- tmp %>% filter(y!="1" )
+  hist(tmp2$Z.PI_Plates_mean,breaks=1000)
   
   
   
+  tmp <- info_df[!is.na(info_df$PI_Plates_mean),]
   
+  tmp1 <- tmp %>% filter(y=="1")
+  hist(tmp1$PI_Plates_mean,breaks=1000)
+  
+  tmp2 <- tmp %>% filter(y!="1" )
+  hist(tmp2$PI_Plates_mean,breaks=1000)
+  
+  
+  
+  tmp <- info_df[!is.na(info_df$PI_Plates_sd),]
+  
+  tmp1 <- tmp %>% filter(y=="1")
+  hist(tmp1$PI_Plates_sd,breaks=1000)
+  
+  tmp2 <- tmp %>% filter(y!="1" )
+  hist(tmp2$PI_Plates_sd,breaks=1000)
   
   
   
