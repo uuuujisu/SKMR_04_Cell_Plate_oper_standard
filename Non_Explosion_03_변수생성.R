@@ -17,18 +17,23 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #Rdata load
 load(file="../0.Data/N3_RData/prep02_data.Rdata")
-#summary(prep01_df)
+#summary(prep02_df)
 
+colnames(prep02_df)
+key <- colnames(prep02_df)[1:4]
+IRs <- colnames(prep02_df)[7:31]
+PIs <- colnames(prep02_df)[34:58]
+Plates <- colnames(prep02_df)[71:95]
 
 # 01. 시간 범주 생성 -------------------------------------------------------
 # 1h/3h/6h/12h/24h/48h
 
-hour_df <- prep02_df 
+tmp_hour <- prep02_df %>% select(c(key,'Time'))
 
-hour_df$Time <- as.POSIXct(hour_df$Time, origin="1899-12-30", tz="GMT")
-hour_df$y_date <- as.POSIXct(hour_df$y_date, origin="1899-12-30", tz="GMT")
+tmp_hour$Time <- as.POSIXct(tmp_hour$Time, origin="1899-12-30", tz="GMT")
+tmp_hour$y_date <- as.POSIXct(tmp_hour$y_date, origin="1899-12-30", tz="GMT")
 
-Explosion_Time <- unique(hour_df$y_date)
+Explosion_Time <- unique(tmp_hour$y_date)
 
 t1 <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-1, unit="hours")
 t2 <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-3, unit="hours")
@@ -36,42 +41,26 @@ t3 <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-6, 
 t4 <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-12, unit="hours")
 t5 <- as.POSIXct(Explosion_Time,origin="1899-12-30",tz="GMT") + as.difftime(-24, unit="hours")
 
-hour_df$before_h <- NA
+tmp_hour$before_h <- NA
 for (i in 1:90){
-  hour_df$before_h <- ifelse(hour_df$File_num==i-1 & hour_df$Time >= t1[i] & hour_df$Time <= Explosion_Time[i],"1h",
-                             ifelse(hour_df$File_num==i-1 & hour_df$Time >= t2[i] & hour_df$Time < t1[i] ,"3h",
-                                    ifelse(hour_df$File_num==i-1 & hour_df$Time >= t3[i] & hour_df$Time < t2[i] ,"6h",
-                                           ifelse(hour_df$File_num==i-1 & hour_df$Time >= t4[i] & hour_df$Time < t3[i] ,"12h",
-                                                  ifelse(hour_df$File_num==i-1 & hour_df$Time >= t5[i] & hour_df$Time < t4[i] ,"24h",
-                                                         ifelse(hour_df$File_num==i-1 & hour_df$Time < t5[i] ,"48h",hour_df$before_h))))))
+  tmp_hour$before_h <- ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time >= t1[i] & tmp_hour$Time <= Explosion_Time[i],"1h",
+                             ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time >= t2[i] & tmp_hour$Time < t1[i] ,"3h",
+                                    ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time >= t3[i] & tmp_hour$Time < t2[i] ,"6h",
+                                           ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time >= t4[i] & tmp_hour$Time < t3[i] ,"12h",
+                                                  ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time >= t5[i] & tmp_hour$Time < t4[i] ,"24h",
+                                                         ifelse(tmp_hour$File_num==i-1 & tmp_hour$Time < t5[i] ,"48h",tmp_hour$before_h))))))
 }
-  
+
+tmp_hour <- tmp_hour %>% arrange(File_num,Item_No,Time)
+
 #확인
-#tmp <- hour_df %>% select(c('File_num','Item_No','Time','y','before_h')) %>% arrange(File_num,Item_No,Time)
-#na <- tmp[is.na(tmp$before_df),]
-#tmpp <- tmp %>% filter(File_num==0)
-#with(tmpp,table(before_h))
-
-
-# hour_data save ----------------------------------------------------------
-
-
-save(hour_df, file="../0.Data/N3_RData/hour_data.Rdata")
-#rm(list=ls()[-4])
-
-#Rdata load
-load(file="../0.Data/N3_RData/hour_data.Rdata")
-
-#colnames(hour_df)
-key <- colnames(hour_df)[1:4]
-IRs <- colnames(hour_df)[7:31]
-PIs <- colnames(hour_df)[34:58]
-Plates <- colnames(hour_df)[71:95]
-
+ na <- tmp_hour[is.na(tmp_hour$before_df),]
+# tmpp <- tmp_hour %>% filter(File_num==0)
+# with(tmpp,table(before_h))
 
 # 02. 연소 플레이트 info  -------------------------------------------------------
 
-tmp_plates <- hour_df %>% select(c(key,Plates)) %>% filter(y=="1") %>% distinct()
+tmp_plates <- prep02_df %>% select(c(key,Plates)) %>% filter(y=="1") %>% distinct()
 tmp_plates[c(Plates)] <- sapply(tmp_plates[c(Plates)], function(x) {ifelse(x!=0,1,x)})
 tmp_plates[c(Plates)] <- sapply(tmp_plates[c(Plates)], as.numeric)
 
@@ -95,17 +84,16 @@ cname <- c()
 colnames(aa) <- cname
 
 tmp_plates <- cbind(tmp_plates,aa) %>%
-  select(c(key,'연소Plates갯수',cname))
-tmp_plates$연소Plates_1 <- ifelse(tmp_plates$연소Plates_1 == "P_",NA,tmp_plates$연소Plates_1)
+  select(c(key,'연소Plates갯수',cname)) %>%
+  arrange(File_num,Item_No)
 
-# plate_df <- merge(hour_df, tmp_plates, by = c(key),all.x=TRUE)  %>%
-#   arrange(File_num,Item_No,Time)
+tmp_plates$연소Plates_1 <- ifelse(tmp_plates$연소Plates_1 == "P_",NA,tmp_plates$연소Plates_1) 
 
 
-# 03. summary info  --------------------------------------------------------------
+# 03. summary info --------------------------------------------------------------
 
-IR_df <- hour_df %>% 
-  select(c(key,'Time','before_h',IRs)) %>%
+IR_df <- prep02_df %>% 
+  select(c(key,'Time',IRs)) %>%
   arrange(File_num,Item_No,Time)
 IR_df$IR_Plates_mean <- rowMeans(IR_df[,c(IRs)],na.rm=TRUE)
 IR_df$IR_Plates_sd <- rowSds(as.matrix(IR_df[,c(IRs)]),na.rm=TRUE)
@@ -115,8 +103,8 @@ IR_df$IR_Plates_max <- rowMaxs(as.matrix(IR_df[,c(IRs)]),na.rm=TRUE)
 IR_df$IR_Plates_range <- IR_df$IR_Plates_max - IR_df$IR_Plates_min
 IR_df <- IR_df %>% select(c(-IRs))
 
-PI_df <- hour_df %>% 
-  select(c(key,'Time','before_h',PIs))%>%
+PI_df <- prep02_df %>% 
+  select(c(key,'Time',PIs))%>%
   arrange(File_num,Item_No,Time)
 PI_df$PI_Plates_mean <- rowMeans(PI_df[,c(PIs)],na.rm=TRUE)
 PI_df$PI_Plates_sd <- rowSds(as.matrix(PI_df[,c(PIs)]),na.rm=TRUE)
@@ -126,12 +114,38 @@ PI_df$PI_Plates_max <- rowMaxs(as.matrix(PI_df[,c(PIs)]),na.rm=TRUE)
 PI_df$PI_Plates_range <- PI_df$PI_Plates_max - PI_df$PI_Plates_min
 PI_df <- PI_df %>% select(c(-PIs))
 
-tmp_summary <- cbind(IR_df,PI_df %>% select(c(-key,-"Time",-"before_h")))
+tmp_summary <- cbind(IR_df,PI_df %>% select(c(-key,-"Time")))
+
+#NaN, inf처리필요
+#asdf <- IR_df %>% filter(File_num==1,Item_No=="J-J")
+tmp_summary[sapply(tmp_summary,is.infinite)] <- NA
+tmp_summary[sapply(tmp_summary,is.nan)] <- NA
 
 
-# info_data save ----------------------------------------------------------
+# 04. scale info ----------------------------------------------------------
+#연소기간별/Cell별로 표준화
 
-info_df <- merge(tmp_summary,tmp_plates,by=c(key),all.x=TRUE) %>%
+tmp_ss <- tmp_summary %>% 
+  group_by(File_num,Item_No) %>% 
+  mutate(Z.IR_Plates_mean=scale(IR_Plates_mean),
+         Z.IR_Plates_sd=scale(IR_Plates_sd),
+         Z.IR_Plates_med=scale(IR_Plates_med),
+         Z.IR_Plates_min=scale(IR_Plates_min),
+         Z.IR_Plates_max=scale(IR_Plates_max),
+         Z.IR_Plates_range=scale(IR_Plates_range),
+         Z.PI_Plates_mean=scale(PI_Plates_mean),
+         Z.PI_Plates_sd=scale(PI_Plates_sd),
+         Z.PI_Plates_med=scale(PI_Plates_med),
+         Z.PI_Plates_min=scale(PI_Plates_min),
+         Z.PI_Plates_max=scale(PI_Plates_max),
+         Z.PI_Plates_range=scale(PI_Plates_range)) %>%
+  ungroup %>%
   arrange(File_num,Item_No,Time)
 
-save(info_df,tmp_summary,tmp_plates,file="../0.Data/N3_RData/info_data.Rdata")
+# info_data save ----------------------------------------------------------
+tmp <- cbind(tmp_hour,tmp_ss %>% select(c(-key,-"Time")) )
+
+info_df <- merge(tmp,tmp_plates,by=c(key),all.x=TRUE) %>%
+  arrange(File_num,Item_No,Time)
+
+save(info_df,tmp_hour,tmp_ss,tmp_plates,file="../0.Data/N3_RData/info_data.Rdata")
