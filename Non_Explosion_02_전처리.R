@@ -14,7 +14,7 @@ print(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #Rdata load
-load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
+load(file="../0.Data/N3_RData/total_data.Rdata")
 
 
 
@@ -39,10 +39,9 @@ for (i in 1:length(Err_File_num)){
                      | Item_No != Err_Item_No[i])
 }
 
-
 #data save
 prep01_df <- total_df
-save(prep01_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/prep01_data.Rdata")
+save(prep01_df,file = "../0.Data/N3_RData/prep01_data.Rdata")
 
 # 02. 데이터 추출 오류 파일 삭제 --------------------------------------------------------------------
 
@@ -51,7 +50,7 @@ save(prep01_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/prep
 
 prep02_df <- prep01_df %>% filter(File_num!=58 | Item_No != "I-A" )
 
-save(prep02_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/prep02_data.Rdata")
+save(prep02_df,file = "../0.Data/N3_RData/prep02_data.Rdata")
 
 
 

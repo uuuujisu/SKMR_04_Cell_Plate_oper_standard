@@ -18,11 +18,6 @@ source("../R_code/Plot_lib.R")
 source("../R_code/R_function.R")
 
 
-
-# (N3 공장) -------------------------------------------------------------------
-
-
-
 # 01. raw data ------------------------------------------------------------
 
 
@@ -144,7 +139,7 @@ raw_df[,'Item_No'] <- toupper(raw_df[,'Item_No'])
 N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
-# (save1) -------------------------------------------------------------------
+# raw_data save -----------------------------------------------------------
 save(raw_df,N3_Explosion_DF, file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 rm(list=ls())
 
@@ -187,7 +182,8 @@ total_df <- merge_tmp  %>%
 str(total_df)
 
 
-# (save2) -------------------------------------------------------------------
+
+# total_data save ---------------------------------------------------------
 save(total_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 rm(list=ls())
 
