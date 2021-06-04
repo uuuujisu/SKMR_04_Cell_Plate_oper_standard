@@ -26,7 +26,7 @@ setwd("../0.Data")
 getwd()
 
 # N3 연소발생여부 데이터
-N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO.csv", header = TRUE))
+N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO_수정.csv", header = TRUE))
 N3_Explosion_DF <- as.data.frame(sapply(N3_Explosion_DF, function(x) {ifelse(is.na(x)|x==3,0,x)}))
 
 # N3 Tag 데이터
@@ -144,14 +144,19 @@ save(raw_df,N3_Explosion_DF, file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data
 rm(list=ls())
 
 
-# 04. total data ----------------------------------------------------------
-
 dddd <- load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 
-# plates 전류합 column 생성
-raw_df$Plates전류합<-rowSums(raw_df[,6:30], na.rm = TRUE)
+colnames(raw_df)
+IRs <- colnames(raw_df)[5:29]
+colnames(N3_Explosion_DF)
+Plates <- colnames(N3_Explosion_DF)[6:30]
 
-# 연소 별 endtime column 생성
+# 04. total data ----------------------------------------------------------
+
+# plates 전류합 column 생성
+raw_df$Plates전류합<-rowSums(raw_df[,c(IRs)], na.rm = TRUE)
+
+# 연소 별 start,endtime column 생성
 raw_tmp <- raw_df %>% 
   group_by(File_num,Item_No) %>% 
   mutate(GROUP_starttime = min(Time)) %>%
@@ -173,11 +178,11 @@ N3_Explosion_tmp <- N3_Explosion_DF %>%
 
 merge_tmp <- merge(raw_tmp, N3_Explosion_tmp,
                    by= c('Item_No','y_date'), all.x = TRUE) 
-merge_tmp[,70:95] <-  sapply(merge_tmp[,70:95], function(x) {ifelse(is.na(x),0,x)}) 
+merge_tmp[,c(Plates,"y")] <-  sapply(merge_tmp[,c(Plates,"y")], function(x) {ifelse(is.na(x),0,x)}) 
 
 total_df <- merge_tmp  %>%
   select(c('File_num','Item_No','y_date','y',everything())) %>% 
-  arrange('File_num','Item_No','Time')
+  arrange(File_num,Item_No,Time)
 
 str(total_df)
 
@@ -193,9 +198,10 @@ rm(list=ls())
 
 # load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 # 
+# #왜 정렬 안되어있지 ?...
 # tmp <- total_df %>% select(c('File_num','Item_No','y_date','y','액보충시간'))
-# tmp <- tmp[!duplicated(tmp), ] %>%
-#   arrange(File_num)
+# tmp <- tmp[!duplicated(tmp), ] #%>%
+#  # arrange(File_num)
 # 
 # sss <-sum(as.numeric(tmp$y))
 # 

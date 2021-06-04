@@ -40,15 +40,39 @@ for (i in 1:length(Err_File_num)){
 }
 
 #data save
-prep01_df <- total_df
+prep01_df <- total_df %>% 
+  arrange(File_num,Item_No,Time)
+
 save(prep01_df,file = "../0.Data/N3_RData/prep01_data.Rdata")
+load(file = "../0.Data/N3_RData/prep01_data.Rdata")
 
 # 02. 데이터 추출 오류 파일 삭제 --------------------------------------------------------------------
 
-# N-3_RI-110A-58.csv 데이터 에러
-# 7,635,901 -> 7,634,136
+# 데이터 추출 에러 -> 연소 89건 됨... 77번 파일 오류
+# 7,635,901 -> 7,588,554
+# err n = 47,347
+# 7588554 + 47347
 
-prep02_df <- prep01_df %>% filter(File_num!=58 | Item_No != "I-A" )
+tmp02 <- prep01_df %>%
+  group_by(File_num,Item_No) %>%
+  summarise(n=n())
+tmp02$err <- ifelse(tmp02$n!=2881,TRUE,FALSE)
+
+tmp02 <- tmp02 %>% filter(err==1)
+prep02 <- merge(prep01_df,tmp02, by=c('File_num','Item_No'),all.x=TRUE) 
+# error <- prep02 %>% filter(err==TRUE) 
+
+
+prep02 <- prep02 %>%
+  filter(is.na(err)==TRUE) %>%
+  select(-c('n','err',))
+
+prep02_df <-  prep02 %>%
+  arrange(File_num,Item_No,Time) %>%
+  group_by(File_num,Item_No) %>%
+  mutate(t = row_number()) %>%
+  ungroup %>%
+  select(c('File_num','Item_No','y_date','y','Time','t',everything()))
 
 save(prep02_df,file = "../0.Data/N3_RData/prep02_data.Rdata")
 
