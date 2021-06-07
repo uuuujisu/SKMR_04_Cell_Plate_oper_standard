@@ -26,7 +26,7 @@ setwd("../0.Data")
 getwd()
 
 # N3 연소발생여부 데이터
-N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO_수정.csv", header = TRUE))
+N3_Explosion_DF <- as.data.frame(read.csv("N3 20년 연소 Cell_Collector NO_210604_수정_유지수.csv", header = TRUE))
 N3_Explosion_DF <- as.data.frame(sapply(N3_Explosion_DF, function(x) {ifelse(is.na(x)|x==3,0,x)}))
 
 # N3 Tag 데이터
@@ -140,10 +140,12 @@ N3_Explosion_DF[,'Item_No'] <- toupper(N3_Explosion_DF[,'Item_No'])
 
 
 # raw_data save -----------------------------------------------------------
+
+# Yu.Jisu directory
 save(raw_df,N3_Explosion_DF, file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 rm(list=ls())
 
-
+# Yu.Jisu directory
 dddd <- load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/raw_data.Rdata")
 
 colnames(raw_df)
@@ -189,6 +191,7 @@ str(total_df)
 
 
 # total_data save ---------------------------------------------------------
+# Yu.Jisu directory
 save(total_df,file = "D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/N3_RData/total_data.Rdata")
 rm(list=ls())
 
