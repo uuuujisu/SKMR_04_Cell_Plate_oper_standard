@@ -109,6 +109,8 @@ summary_2day$y <- as.factor(summary_2day$y)
 #summary_1day$Item_No <- as.factor(summary_1day$Item_No)
 
 
+# 02. modeling ------------------------------------------------------------
+
 # split train & test set to 8:2
 set.seed(210607)
 
