@@ -9,7 +9,7 @@ if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
 if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
 
 if(!require(rpart)) install.packages('rpart'); require(rpart)
-
+if(!require(rpart.plot)) install.packages('rpart.plot'); require(rpart.plot)
 
 #directory - R_code
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -186,9 +186,46 @@ max <- colnames(summary_tree[grep("max",colnames(summary_tree))])
 
 set.seed(210609)
 
-samples <- sample(1:nrow(summary_tree),size=0.8*nrow(summary_tree),replace=F)
-train <- summary_tree[samples,]
-test <- summary_tree[-samples,]
+# samples <- sample(1:nrow(summary_tree),size=0.8*nrow(summary_tree),replace=F)
+# train <- summary_tree[samples,-c(1:3)]
+# test <- summary_tree[-samples,-c(1:3)]
 
+alldata <- summary_tree[,-c(1:3)]
+tree.all <- rpart(y ~ ., data=alldata)
+rpart.plot(tree.all)
+
+subdata1 <- summary_tree[,c('y',EV,VE,mean)]
+tree.sub1 <- rpart(y ~ ., data=subdata1)
+rpart.plot(tree.sub1)
+
+subdata2 <- summary_tree[,c('y',EV,ER,VE,mean)]
+tree.sub2 <- rpart(y ~ ., data=subdata2)
+rpart.plot(tree.sub2)
+
+subdata3 <- summary_tree[,c('y',EV,MV,VE,VM,mean)]
+tree.sub3 <- rpart(y ~ ., data=subdata3)
+rpart.plot(tree.sub3)
+
+subdata4 <- summary_tree[,c('y',EV,MV,MR,VE,VM,mean)]
+tree.sub4 <- rpart(y ~ ., data=subdata4)
+rpart.plot(tree.sub4)
+
+subdata5 <- summary_tree[,c('y',EV,VE,mean,max)]
+tree.sub5 <- rpart(y ~ ., data=subdata5)
+rpart.plot(tree.sub5)
+
+subdata6 <- summary_tree[,c('y',EV,ER,VE,mean, max)]
+tree.sub6 <- rpart(y ~ ., data=subdata6)
+rpart.plot(tree.sub6)
+
+subdata7 <- summary_tree[,c('y',EV,MV,VE,VM,mean,max)]
+tree.sub7 <- rpart(y ~ ., data=subdata7)
+rpart.plot(tree.sub7)
+
+subdata8 <- summary_tree[,c('y',EV,MV,MR,VE,VM,mean,max)]
+tree.sub8 <- rpart(y ~ ., data=subdata8)
+rpart.plot(tree.sub8)
+
+# all=sub3=sub4=sub7=sub8, sub1=sub2 sub5=sub6 결과같음
 
 
