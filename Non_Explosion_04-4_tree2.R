@@ -8,7 +8,9 @@ if(!require(dplyr)) install.packages('dplyr'); require(dplyr)
 if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
 if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
 
-if(!require(glmnet)) install.packages('glmnet'); require(glmnet)
+if(!require(caret)) install.packages('caret'); require(caret)
+if(!require(rpart)) install.packages('rpart'); require(rpart)
+if(!require(rpart.plot)) install.packages('rpart.plot'); require(rpart.plot)
 
 #directory - R_code
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -55,7 +57,8 @@ tmp <- tmp_hour %>%
 #1h
 tmp_1h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="1h") %>%
+  aa <- tmp %>% 
+    filter(before_h=="1h") %>%
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -88,7 +91,8 @@ tmp_1h <- tmp_1h %>%
 #3h
 tmp_3h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="3h") %>%
+  aa <- tmp %>% 
+    filter(before_h=="3h"| before_h=="1h") %>%
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -118,7 +122,8 @@ tmp_3h <- tmp_3h %>%
 #6h
 tmp_6h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="6h") %>%
+  aa <- tmp %>%
+    filter(before_h=="6h"| before_h=="3h"| before_h=="1h") %>%
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -148,7 +153,7 @@ tmp_6h <- tmp_6h %>%
 #12h
 tmp_12h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="12h") %>%
+  aa <- tmp %>% filter(before_h=="12h"| before_h=="6h"| before_h=="3h"| before_h=="1h") %>%
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -180,7 +185,7 @@ tmp_12h <- tmp_12h %>%
 #24h
 tmp_24h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="24h") %>%
+  aa <- tmp %>% filter(before_h=="24h"| before_h=="12h"| before_h=="6h"| before_h=="3h"| before_h=="1h") %>%
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -212,7 +217,7 @@ tmp_24h <- tmp_24h %>%
 #48h
 tmp_48h <- NULL
 for (i in 1:25){
-  aa <- tmp %>% filter(before_h=="48h") %>%
+  aa <- tmp %>% 
     select(key,'Time','t',IRs[i],PIs[i]) %>%
     rename(., IR=IRs[i],PI=PIs[i])
   aa$Plate <- 150+i
@@ -242,7 +247,7 @@ tmp_48h <- tmp_48h %>%
 
 #Join
 
-summary_plates <- tmp_1h %>% 
+summary_tree2 <- tmp_1h %>% 
   full_join(tmp_3h, by = c(key,'Plate')) %>% 
   full_join(tmp_6h, by = c(key,'Plate')) %>% 
   full_join(tmp_12h, by = c(key,'Plate')) %>%
@@ -251,174 +256,38 @@ summary_plates <- tmp_1h %>%
   arrange(File_num,Item_No) 
 
 
-summary_plates$y <- as.factor(summary_plates$y)
+summary_tree2$y <- as.factor(summary_tree2$y)
 
 
-# 결측 제거 65,850 -> 65,548
-NArow <- which(is.na(summary_plates),arr.ind=TRUE)
-summary_plates <- summary_plates[-NArow[,1],]
+# 결측 제거 65,850 -> 65,640
+NArow <- which(is.na(summary_tree2),arr.ind=TRUE)
+summary_tree2 <- summary_tree2[-NArow[,1],]
 
 
-save(summary_plates, file="../0.Data/N3_RData/summary_plates_data.Rdata")
-load("../0.Data/N3_RData/summary_plates_data.Rdata")
+save(summary_tree2, file="../0.Data/N3_RData/summary_tree2_data.Rdata")
+load("../0.Data/N3_RData/summary_tree2_data.Rdata")
 
 # 02. modeling ------------------------------------------------------------
-key <- colnames(summary_plates)[1:4]
-ranges <- grep("range",colnames(summary_plates))
-
-# split train & test set to 8:2
-set.seed(210607)
-
-samples <- sample(1:nrow(summary_plates),size=0.8*nrow(summary_plates),replace=F)
-train <- summary_plates[samples,]
-test <- summary_plates[-samples,]
-x.test<- test %>% select(-c(key,'Plate',ranges)) %>% data.matrix()
-                         
-
-# # model.A : mean sd med range
-# model.A <- glm(y ~ IR_mean_1h + IR_sd_1h + IR_med_1h  + IR_range_1h 
-#                + PI_mean_1h + PI_sd_1h + PI_med_1h +  PI_range_1h 
-#                + IR_mean_3h + IR_sd_3h + IR_med_3h +  IR_range_3h 
-#                + PI_mean_3h + PI_sd_3h + PI_med_3h +  PI_range_3h 
-#                + IR_mean_6h + IR_sd_6h + IR_med_6h +  IR_range_6h 
-#                + PI_mean_6h + PI_sd_6h + PI_med_6h +  PI_range_6h 
-#                + IR_mean_12h + IR_sd_12h + IR_med_12h + IR_range_12h 
-#                + PI_mean_12h + PI_sd_12h + PI_med_12h + PI_range_12h 
-#                + IR_mean_24h + IR_sd_24h + IR_med_24h + IR_range_24h 
-#                + PI_mean_24h + PI_sd_24h + PI_med_24h + PI_range_24h 
-#                ,data = train, family=binomial(link=logit) )
-# summary(model.A)
-# 
-# test$pred.A <- predict(model.A,newdata = test,type="response")
-# summary(test$pred.A)
-# test$pred.A.y <- ifelse(test$pred.A >=0.2,1,0)
-# table(test$pred.A.y)
-# table(test$y,test$pred.A.y)
-# 
-
-# # model.A : mean sd med min max
-# model.A <- glm(y ~ IR_mean_1h + IR_sd_1h + IR_med_1h + IR_min_1h + IR_max_1h
-#                + PI_mean_1h + PI_sd_1h + PI_med_1h + PI_min_1h + PI_max_1h  
-#                + IR_mean_3h + IR_sd_3h + IR_med_3h + IR_min_3h + IR_max_3h  
-#                + PI_mean_3h + PI_sd_3h + PI_med_3h + PI_min_3h + PI_max_3h  
-#                + IR_mean_6h + IR_sd_6h + IR_med_6h + IR_min_6h + IR_max_6h  
-#                + PI_mean_6h + PI_sd_6h + PI_med_6h + PI_min_6h + PI_max_6h  
-#                + IR_mean_12h + IR_sd_12h + IR_med_12h + IR_min_12h + IR_max_12h 
-#                + PI_mean_12h + PI_sd_12h + PI_med_12h + PI_min_12h + PI_max_12h 
-#                + IR_mean_24h + IR_sd_24h + IR_med_24h + IR_min_24h + IR_max_24h 
-#                + PI_mean_24h + PI_sd_24h + PI_med_24h + PI_min_24h + PI_max_24h 
-#                + IR_mean_48h + IR_sd_48h + IR_med_48h + IR_min_48h + IR_max_48h 
-#                + PI_mean_48h + PI_sd_48h + PI_med_48h + PI_min_48h + PI_max_48h 
-#                ,data = train, family=binomial(link=logit) )
-# summary(model.A)
-# 
-# test$pred.A <- predict(model.A,newdata = test,type="response")
-# summary(test$pred.A)
-# test$pred.A.y <- ifelse(test$pred.A >=0.2,1,0)
-# table(test$pred.A.y)
-# table(test$y,test$pred.A.y)
+ranges <- grep("range",colnames(summary_tree2))
+min <- grep("min",colnames(summary_tree2))
+max <- grep("max",colnames(summary_tree2))
+med <- grep("med",colnames(summary_tree2))
+mean <- colnames(summary_tree2)[grep("mean",colnames(summary_tree2) )]
+sd <- colnames(summary_tree2)[grep("sd",colnames(summary_tree2) )]
 
 
-# model.B : mean sd med min max 48h
-model.B <- glm(y ~ IR_mean_1h + IR_sd_1h + IR_med_1h + IR_min_1h + IR_max_1h
-               + PI_mean_1h + PI_sd_1h + PI_med_1h + PI_min_1h + PI_max_1h  
-               + IR_mean_3h + IR_sd_3h + IR_med_3h + IR_min_3h + IR_max_3h  
-               + PI_mean_3h + PI_sd_3h + PI_med_3h + PI_min_3h + PI_max_3h  
-               + IR_mean_6h + IR_sd_6h + IR_med_6h + IR_min_6h + IR_max_6h  
-               + PI_mean_6h + PI_sd_6h + PI_med_6h + PI_min_6h + PI_max_6h  
-               + IR_mean_12h + IR_sd_12h + IR_med_12h + IR_min_12h + IR_max_12h 
-               + PI_mean_12h + PI_sd_12h + PI_med_12h + PI_min_12h + PI_max_12h 
-               + IR_mean_24h + IR_sd_24h + IR_med_24h + IR_min_24h + IR_max_24h 
-               + PI_mean_24h + PI_sd_24h + PI_med_24h + PI_min_24h + PI_max_24h 
-               + IR_mean_48h + IR_sd_48h + IR_med_48h + IR_min_48h + IR_max_48h 
-               + PI_mean_48h + PI_sd_48h + PI_med_48h + PI_min_48h + PI_max_48h 
-               ,data = train, family=binomial(link=logit) )
-summary(model.B)
-
-test$pred.B <- predict(model.B,newdata = test,type="response")
-summary(test$pred.B)
-test$pred.B.y <- ifelse(test$pred.B >=0.2,1,0)
-table(test$pred.B.y)
-table(test$y,test$pred.B.y)
+alldata <- summary_tree2[,-c(1:3,5,min,max)]
+tree2.all <- rpart(y ~ ., data=alldata)
+rpart.plot(tree2.all)
+tree2.pred <- predict(tree2.all,newdata=alldata, type = "class")
+confusionMatrix(tree2.pred, alldata$y)
 
 
+subdata <- alldata[,1:41]
+tree2_sub <- rpart(y ~ ., data=subdata)
+rpart.plot(tree2_sub)
 
+# subdata2 <- summary_tree2[,c('y',mean,sd)]
+# tree2_sub2 <- rpart(y ~ ., data=subdata2)
+# rpart.plot(tree2_sub2)
 
-# 03. variable selection --lasso ------------------------------------------
-
-
-# split train & test set to 8:2
-# set.seed(210608)
-# 
-# samples <- sample(1:nrow(summary_plates),size=0.8*nrow(summary_plates),replace=F)
-# train <- summary_plates[samples,]
-# test <- summary_plates[-samples,]
-
-# LASSO - L1 norm
-
-x <- train %>% select(-c(key,'Plate',ranges)) %>% data.matrix()
-y <- train$y
-
-
-# model3 : lambda 0.005
-model.lasso <- glmnet(x, y, alpha = 1, family = "binomial",
-                       lambda = 0.005)
-summary(model.lasso)
-coef(model.lasso)
-
-# model3 predict
-test$pred.lasso <- predict(model.lasso,newx=x.test, type="response")
-summary(test$pred.lasso)
-
-test$pred.lasso.y <- ifelse(test$pred.lasso >=0.1,1,0)
-
-table(test$pred.lasso.y)
-table(test$y,test$pred.lasso.y)
-
-
-# cross-validation 으로 optimal lambda 찾기 -- 오래 걸리고 성능 x.....
-
-# cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-# plot(cv.lasso)
-# fit.lasso <- glmnet(x, y, alpha = 1, family="binomial", nlambda = 100)
-# fit.lasso.cv <- cv.glmnet(x, y, family = "binomial",
-#                           nfolds = 10, alpha=1, lambda = fit.lasso$lambda)
-# plot(fit.lasso.cv) 
-# 
-# 
-# # model1 : lambda 최소 
-# model.lasso <- glmnet(x, y, alpha = 1, family = "binomial",
-#                       lambda = fit.lasso.cv$lambda.min)
-# 
-# summary(model.lasso)
-# coef(model.lasso)
-# 
-# # model1 predict
-# 
-# test$pred.lasso <- predict(model.lasso,newx=x.test, type="response")
-# summary(test$pred.lasso)
-# 
-# test$pred.lasso.y <- ifelse(test$pred.lasso >=0.1,1,0)
-# 
-# table(test$pred.lasso.y)
-# table(test$y,test$pred.lasso.y)
-
-# # model2 : lambda 1se
-# model.lasso2 <- glmnet(x, y, alpha = 1, family = "binomial",
-#                       lambda = fit.lasso.cv$lambda.1se)
-# 
-# summary(model.lasso2)
-# coef(model.lasso2)
-# 
-# # model2 predict
-# 
-# test$pred.lasso2 <- predict(model.lasso2,newx=x.test, type="response")
-# summary(test$pred.lasso2)
-# 
-# test$pred.lasso2.y <- ifelse(test$pred.lasso2 >=0.1,1,0)
-# 
-# table(test$pred.lasso2.y)
-# table(test$y,test$pred.lasso2.y)
-
-
-save(train, test, file="../0.Data/N3_RData/model2_data.Rdata")

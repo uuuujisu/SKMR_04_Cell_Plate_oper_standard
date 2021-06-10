@@ -215,3 +215,13 @@ rm(list=ls())
 # aaa <- aaa[!duplicated(aaa), ]
 # 
 # tmp <- unique(tmp[which(time_df$y=="1"),c('File_num','Item_No',)])
+
+
+
+
+
+
+#
+
+# Error Data  -------------------------------------------------------------
+
