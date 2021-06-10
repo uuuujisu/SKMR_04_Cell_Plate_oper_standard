@@ -197,7 +197,6 @@ rpart.plot(tree.all)
 pred.all <- predict(tree.all,newdata=alldata, type = "class")
 confusionMatrix(pred.all, alldata$y)
 
-
 subdata1 <- summary_tree[,c('y',EV,VE,mean)]
 tree.sub1 <- rpart(y ~ ., data=subdata1)
 rpart.plot(tree.sub1)
@@ -238,5 +237,13 @@ confusionMatrix(pred.sub5, alldata$y)
 # all=sub3=sub4=sub7=sub8, sub1=sub2 sub5=sub6 결과같음
 
 
+summary_tree$pred1 <- pred.sub1
+summary_tree$pred2 <- pred.all
 
+tree_yn <- summary_tree %>%
+  select(c(key,'pred1','pred2'))
 
+table(tree_yn$y,tree_yn$pred1)
+table(tree_yn$y,tree_yn$pred2)
+
+save(tree_yn,file="../0.Data/N3_RData/tree_yn.Rdata")

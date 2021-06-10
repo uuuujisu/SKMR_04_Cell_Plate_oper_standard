@@ -240,5 +240,28 @@ save(train,test, file="../0.Data/N3_RData/model1_data.Rdata")
 
 
 
+# TREE --------------------------------------------------------------------
+
+load("../0.Data/N3_RData/summary_2day_data.Rdata")
+
+data <- summary_2day[,c(4:29)]
+tree.2day <- rpart(y ~ ., data=data,method="class")
+rpart.plot(tree.2day)
+pred.2day <- predict(tree.2day,newdata=data, type = "class")
+confusionMatrix(pred.2day, data$y)
+
+
+tree_yn <- summary_2day %>% 
+  select(c('File_num','Item_No','y_date','y'))
+tree_yn$pred <- pred.2day
+
+alpha <- tree_yn %>%
+  filter(y==1 & pred==0 )
+
+beta <- tree_yn %>%
+  filter(y==0 & pred==1)
+
+True <- tree_yn %>%
+  filter(y==1 & pred==1)
 
 

@@ -422,3 +422,38 @@ table(test$y,test$pred.lasso.y)
 
 
 save(train, test, file="../0.Data/N3_RData/model2_data.Rdata")
+
+
+
+
+# TREE --------------------------------------------------------------------
+
+data <- summary_plates[,c(4,6:77)]
+data <- summary_plates[,c(4,6:65)]
+tree.plates <- rpart(y ~ ., data=data,method="class")
+rpart.plot(tree.plates)
+pred.plates <- predict(tree.plates,newdata=data, type = "class")
+confusionMatrix(pred.plates, data$y)
+
+
+load("../0.Data/N3_RData/summary_plates_data.Rdata")
+
+data <- summary_plates[,c(4,6:77)]
+tree.plates <- rpart(y ~ ., data=data,method="class")
+rpart.plot(tree.plates)
+pred.plates <- predict(tree.plates,newdata=data, type = "class")
+confusionMatrix(pred.plates, data$y)
+
+tree_yn <- summary_plates %>% 
+  select(c('File_num','Item_No','y_date','y'))
+tree_yn$pred <- pred.plates
+
+alpha <- tree_yn %>%
+  filter(y==1 & pred==0 )
+
+beta <- tree_yn %>%
+  filter(y==0 & pred==1)
+
+True <- tree_yn %>%
+  filter(y==1 & pred==1)
+
