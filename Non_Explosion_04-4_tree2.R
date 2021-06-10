@@ -279,13 +279,15 @@ sd <- colnames(summary_tree2)[grep("sd",colnames(summary_tree2) )]
 alldata <- summary_tree2[,-c(1:3,5,min,max)]
 tree2.all <- rpart(y ~ ., data=alldata)
 rpart.plot(tree2.all)
-tree2.pred <- predict(tree2.all,newdata=alldata, type = "class")
-confusionMatrix(tree2.pred, alldata$y)
-
+pred2.all <- predict(tree2.all,newdata=alldata, type = "class")
+confusionMatrix(pred2.all, alldata$y)
 
 subdata <- alldata[,1:41]
-tree2_sub <- rpart(y ~ ., data=subdata)
-rpart.plot(tree2_sub)
+tree2.sub <- rpart(y ~ ., data=subdata)
+rpart.plot(tree2.sub)
+pred2.sub <- predict(tree2.sub,newdata=alldata, type = "class")
+confusionMatrix(pred2.sub, subdata$y)
+
 
 # subdata2 <- summary_tree2[,c('y',mean,sd)]
 # tree2_sub2 <- rpart(y ~ ., data=subdata2)
