@@ -52,7 +52,8 @@ load(file="../0.Data/N3_RData/tree_yn.Rdata")
 
 table(tree_yn$y,tree_yn$pred1)
 table(tree_yn$y,tree_yn$pred2)
-
+table(tree_yn$y,tree_yn$pred3)
+table(tree_yn$y,tree_yn$pred4)
 
 tmp <- prep02_df %>%
   left_join(tree_yn, by = c('File_num','Item_No','y_date','y'))
@@ -73,6 +74,9 @@ tmp <- prep02_df %>%
 #   filter(y==1 & pred1==1)
 # #31691/11
 
+# -------------------------------------------------------------------------
+
+
 alpha2 <- tree_yn %>%
   filter(y==1 & pred2==0 )
 
@@ -81,3 +85,26 @@ beta2 <- tree_yn %>%
 
 True2 <- tree_yn %>%
   filter(y==1 & pred2==1)
+
+# -------------------------------------------------------------------------
+
+
+alpha3 <- tree_yn %>%
+  filter(y==1 & pred3==0 )
+
+beta3 <- tree_yn %>%
+  filter(y==0 & pred3==1)
+
+True3 <- tree_yn %>%
+  filter(y==1 & pred3==1)
+
+
+alpha4 <- tree_yn %>%
+  filter(y==1 & pred4==0 )
+
+beta4 <- tree_yn %>%
+  filter(y==0 & pred4==1)
+
+True4 <- tree_yn %>%
+  filter(y==1 & pred4==1)
+

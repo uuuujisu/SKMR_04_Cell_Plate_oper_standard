@@ -183,7 +183,7 @@ VE <- colnames(summary_tree)[grep("VE",colnames(summary_tree))]
 VM <- colnames(summary_tree)[grep("VM",colnames(summary_tree))]
 mean <- colnames(summary_tree[grep("mean",colnames(summary_tree))])
 max <- colnames(summary_tree[grep("max",colnames(summary_tree))])
-
+max <- colnames(summary_tree[grep("max",colnames(summary_tree))])
 
 set.seed(210609)
 
@@ -196,6 +196,13 @@ tree.all <- rpart(y ~ ., data=alldata,method="class")
 rpart.plot(tree.all)
 pred.all <- predict(tree.all,newdata=alldata, type = "class")
 confusionMatrix(pred.all, alldata$y)
+
+onedata <- summary_tree[,c(4:84)]
+tree.one <- rpart(y ~ ., data=onedata,method="class")
+rpart.plot(tree.one)
+pred.one <- predict(tree.one,newdata=onedata, type = "class")
+confusionMatrix(pred.one, onedata$y)
+
 
 subdata1 <- summary_tree[,c('y',EV,VE,mean)]
 tree.sub1 <- rpart(y ~ ., data=subdata1)
@@ -216,11 +223,11 @@ confusionMatrix(pred.sub1, alldata$y)
 # tree.sub4 <- rpart(y ~ ., data=subdata4)
 # rpart.plot(tree.sub4)
 
-subdata5 <- summary_tree[,c('y',EV,VE,mean,max)]
-tree.sub5 <- rpart(y ~ ., data=subdata5)
-rpart.plot(tree.sub5)
-pred.sub5 <- predict(tree.sub5,newdata=alldata, type = "class")
-confusionMatrix(pred.sub5, alldata$y)
+# subdata5 <- summary_tree[,c('y',EV,VE,mean,max)]
+# tree.sub5 <- rpart(y ~ ., data=subdata5)
+# rpart.plot(tree.sub5)
+# pred.sub5 <- predict(tree.sub5,newdata=alldata, type = "class")
+# confusionMatrix(pred.sub5, alldata$y)
 
 # subdata6 <- summary_tree[,c('y',EV,ER,VE,mean, max)]
 # tree.sub6 <- rpart(y ~ ., data=subdata6)
@@ -236,14 +243,37 @@ confusionMatrix(pred.sub5, alldata$y)
 
 # all=sub3=sub4=sub7=sub8, sub1=sub2 sub5=sub6 결과같음
 
+# IR data tree (PI 제외)
+IR <- colnames(summary_tree[grep("IR",colnames(summary_tree))])
+
+IRdata <- summary_tree[,c('y',IR)]
+tree.IR <- rpart(y ~ ., data=IRdata,method="class")
+rpart.plot(tree.IR)
+pred.IR <- predict(tree.IR,newdata=IRdata, type = "class")
+confusionMatrix(pred.IR, IRdata$y)
+
+# IRone <- colnames(onedata[grep("IR",colnames(onedata))])
+# IRonedata <- onedata[,c('y',IRone)]
+# tree.IRone <- rpart(y ~ ., data=IRonedata,method="class")
+# rpart.plot(tree.IRone)
+# pred.IRone <- predict(tree.IRone,newdata=IRonedata, type = "class")
+# confusionMatrix(pred.IRone, IRonedata$y)
 
 summary_tree$pred1 <- pred.sub1
 summary_tree$pred2 <- pred.all
+summary_tree$pred3 <- pred.IR
+summary_tree$pred4 <- pred.one
+
 
 tree_yn <- summary_tree %>%
-  select(c(key,'pred1','pred2'))
+  select(c(key,'pred1','pred2','pred3','pred4'))
 
 table(tree_yn$y,tree_yn$pred1)
 table(tree_yn$y,tree_yn$pred2)
+table(tree_yn$y,tree_yn$pred3)
+table(tree_yn$y,tree_yn$pred4)
 
 save(tree_yn,file="../0.Data/N3_RData/tree_yn.Rdata")
+
+
+
