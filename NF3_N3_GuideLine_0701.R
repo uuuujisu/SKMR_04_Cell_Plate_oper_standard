@@ -176,8 +176,9 @@ for (i in 1:length(Err_File_num)){
 prep01_df <- total_df %>% 
   arrange(File_num,Item_No,Time)
 
-#Rdata load (용량문제로 error 뜰 시)
-# save(prep01_df,key,IRs,PIs,Plates,file="../NF3_N3_GuideLine/prep01_data.Rdata")
+
+# Rdata load (용량문제로 error 뜰 시)
+# save(prep01_df, file="../NF3_N3_GuideLine/prep01_data.Rdata")
 # rm(list=ls())
 # load(file="../NF3_N3_GuideLine/prep01_data.Rdata")
 # colnames(prep01_df)
@@ -185,8 +186,6 @@ prep01_df <- total_df %>%
 # IRs <- colnames(prep01_df)[8:32]
 # PIs <- colnames(prep01_df)[40:64]
 # Plates <- colnames(prep01_df)[81:105]
-
-
 
 # 3. 변수생성 --------------------------------------------------------------------
 
@@ -306,6 +305,8 @@ df_1h <- df_1h[-NArow[,1],]
 
 df_1h$y <- as.factor(df_1h$y)
 
+
+# save(df,df_1h, file="../NF3_N3_GuideLine/df.Rdata")
 
 # 4. 모델링 ------------------------------------------------------------------
 set.seed(0628)
