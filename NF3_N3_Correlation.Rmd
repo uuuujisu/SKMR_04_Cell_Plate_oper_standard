@@ -1,0 +1,171 @@
+---
+title: "전류load별 IR, PI values"
+author: "Yu Jisu"
+date: '2021 7 2 '
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=TRUE, cache=FALSE, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
+rm(list=ls())
+
+#packages
+if(!require(dplyr)) install.packages('dplyr'); require(dplyr)
+if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
+
+if(!require(corrplot)) install.packages('corrplot'); require(corrplot)
+
+#directory - R_code
+print(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+#Rdata load
+load(file= "../0.Data/NF3_N3_GuideLine/df.Rdata")
+```
+
+for (i in Imp){
+  boxplot(as.formula(paste0(i,"~y")),data=tmp_1h,outline=FALSE)
+}
+
+
+
+```{r message=FALSE, echo=FALSE}
+data <- df_1h[,c(4:9,15:18)] 
+varlist <- colnames(data)[3:10]
+
+for (i in varlist){
+  plot(as.formula(paste0(i,"~전류load_1h")),data,type='n', xlab="전류load",ylab=i)
+  title(paste0("연소 1시간 내 전류load별 ",i))
+  y0 <- data[data$y==0,]
+  y1 <- data[data$y==1,]
+  points(as.formula(paste0(i,"~전류load_1h")),y0)
+  points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+} 
+
+```
+### 이상치 제거
+
+```{r message=FALSE, echo=FALSE}
+tmp <- data[data$평균IR_시계열SD_1h<=boxplot(data$평균IR_시계열SD_1h)$stats[5,1],]  
+boxplot(tmp$평균IR_시계열SD_1h)
+i<- varlist[1]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+tmp <- data[data$최대IR_시계열SD_1h<=boxplot(data$최대IR_시계열SD_1h)$stats[5,1],]  
+boxplot(tmp$최대IR_시계열SD_1h)
+i<- varlist[2]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+tmp <- data[data$IR플레이트_군집SD_평균_1h<=boxplot(data$IR플레이트_군집SD_평균_1h)$stats[5,1],]  
+boxplot(tmp$IR플레이트_군집SD_평균_1h)
+i<- varlist[3]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+tmp <- data[data$IR플레이트_군집SD_최대_1h<=boxplot(data$IR플레이트_군집SD_최대_1h)$stats[5,1],]  
+boxplot(tmp$IR플레이트_군집SD_최대_1h)
+i<- varlist[4]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+
+tmp <- data[data$평균PI_시계열SD_1h<=boxplot(data$평균PI_시계열SD_1h)$stats[5,1],]  
+boxplot(tmp$평균PI_시계열SD_1h)
+i<- varlist[5]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+
+tmp <- data[data$최대PI_시계열SD_1h<=boxplot(data$최대PI_시계열SD_1h)$stats[5,1],]  
+boxplot(tmp$최대PI_시계열SD_1h)
+i<- varlist[6]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+
+tmp <- data[data$PI플레이트_군집SD_평균_1h<=boxplot(data$PI플레이트_군집SD_평균_1h)$stats[5,1],]  
+boxplot(tmp$PI플레이트_군집SD_평균_1h)
+i<- varlist[7]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+
+tmp <- data[data$PI플레이트_군집SD_최대_1h<=boxplot(data$PI플레이트_군집SD_최대_1h)$stats[5,1],]  
+boxplot(tmp$PI플레이트_군집SD_최대_1h)
+i<- varlist[8]
+plot(as.formula(paste0(i,"~전류load_1h")),tmp,type='n', xlab="전류load",ylab=i)
+title(paste0("연소 1시간 내 전류load별 ",i," (이상치 제거)"))
+y0 <- tmp[tmp$y==0,]
+y1 <- tmp[tmp$y==1,]
+points(as.formula(paste0(i,"~전류load_1h")),y0)
+points(as.formula(paste0(i,"~전류load_1h")),data=y1,col="red",pch=19)
+
+
+
+```
+
+
+<!-- ##전류load별 최대IR 시계열 SD -->
+
+<!-- ```{r message=FALSE, echo=FALSE} -->
+<!-- plot(data$전류load_1h, data$최대IR_시계열SD_1h,type='n', xlab="전류load",ylab="최대IR_시계열SD") -->
+<!-- title("연소 1시간 내 전류load별 최대IR의 시계열 SD") -->
+<!-- points(data$전류load_1h[data$y==0],data$최대IR_시계열SD_1h[data$y==0]) -->
+<!-- points(data$전류load_1h[data$y==1],data$최대IR_시계열SD_1h[data$y==1],col="red",pch=19) -->
+
+<!-- aa <- data[data$최대IR_시계열SD_1h<=boxplot(data$최대IR_시계열SD_1h)$stats[5,1],] -->
+<!-- boxplot(aa$최대IR_시계열SD_1h) -->
+
+<!-- plot(aa$전류load_1h, aa$최대IR_시계열SD_1h,type='n', xlab="전류load",ylab="최대IR_시계열SD") -->
+<!-- title("연소 1시간 내 전류load별 최대IR의 시계열 SD (이상치 제거)") -->
+<!-- points(aa$전류load_1h[aa$y==0],aa$최대IR_시계열SD_1h[aa$y==0]) -->
+<!-- points(aa$전류load_1h[aa$y==1],aa$최대IR_시계열SD_1h[aa$y==1],col="red",pch=19) -->
+<!-- ``` -->
+
+
+
+```{r message=FALSE, echo=FALSE}
+
+data <- df[,c(9,13,18,19,25)] 
+
+NArow <- which(is.na(data),arr.ind=TRUE)
+data <- data[-NArow[,1],]
+
+corv<- cor(data)
+corrplot(corv, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+
+
+```
