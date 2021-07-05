@@ -307,6 +307,7 @@ df_1h$y <- as.factor(df_1h$y)
 
 
 # save(df,df_1h, file="../NF3_N3_GuideLine/df.Rdata")
+load(file="../NF3_N3_GuideLine/df.Rdata")
 
 # 4. ¸ðµ¨¸µ ------------------------------------------------------------------
 set.seed(0628)
@@ -404,3 +405,5 @@ yn_high$pred.sel2 <- pred
 recall <- ifelse( yn_high$pred.sel ==1 | yn_high$pred.sel2 ==1 ,1,0)
 sum(recall)
 table(yn_high$y,recall)
+
+
