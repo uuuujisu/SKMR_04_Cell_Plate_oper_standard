@@ -179,13 +179,13 @@ prep01_df <- total_df %>%
 
 # Rdata load (용량문제로 error 뜰 시)
 # save(prep01_df, file="../NF3_N3_GuideLine/prep01_data.Rdata")
-# rm(list=ls())
-# load(file="../NF3_N3_GuideLine/prep01_data.Rdata")
-# colnames(prep01_df)
-# key <- colnames(prep01_df)[1:4]
-# IRs <- colnames(prep01_df)[8:32]
-# PIs <- colnames(prep01_df)[40:64]
-# Plates <- colnames(prep01_df)[81:105]
+rm(list=ls())
+load(file="../NF3_N3_GuideLine/prep01_data.Rdata")
+colnames(prep01_df)
+key <- colnames(prep01_df)[1:4]
+IRs <- colnames(prep01_df)[8:32]
+PIs <- colnames(prep01_df)[40:64]
+Plates <- colnames(prep01_df)[81:105]
 
 # 3. 변수생성 --------------------------------------------------------------------
 
@@ -254,7 +254,15 @@ df <- df1 %>% select(-c(IRs,PIs,Plates,chrVar,dltVar)) %>%
 df[sapply(df,is.infinite)] <- NA
 df[sapply(df,is.nan)] <- NA
 
-str(df)
+df2 <- df1 %>% select(-c(IRs,PIs,Plates,chrVar)) %>%
+  arrange(File_num,Item_No,Time)
+
+#NaN, inf처리필요
+df2[sapply(df2,is.infinite)] <- NA
+df2[sapply(df2,is.nan)] <- NA
+
+# save(df2, file=)
+
 
 # 1시간 summary 변수 생성
 
