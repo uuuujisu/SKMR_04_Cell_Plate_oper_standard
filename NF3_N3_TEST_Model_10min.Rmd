@@ -1,0 +1,233 @@
+---
+title: "Model_before_10min"
+author: "Yu Jisu"
+date: '2021 7 14 '
+output:
+  html_document :
+    toc : true
+    toc_float : true
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+
+#packages
+if(!require(dplyr)) install.packages('dplyr'); require(dplyr)
+if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+if(!require(tidyverse)) install.packages('tidyverse'); require(tidyverse)
+
+if(!require(lubridate)) install.packages('lubridate'); require(lubridate)
+if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
+if(!require(rpart)) install.packages('rpart'); require(rpart)
+if(!require(rpart.plot)) install.packages('rpart.plot'); require(rpart.plot)
+if(!require(caret)) install.packages('caret'); require(caret)
+if(!require(randomForest)) install.packages('randomForest'); require(randomForest)
+
+#directory - R_code
+print(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+source("./R_function.R")
+```
+
+
+```{r data , message=FALSE, echo=FALSE }
+
+load(file="D:/4.Cell Plate 운전표준수립/YU_JISU/0.Data/NF3_N3_GuideLine/df2_var.Rdata")
+upper <- 2881-10
+lower <- 2821-10
+
+# 1시간, 10분 제외 (양극집합관 개별 온도) 
+df_1h_10min <- df2 %>%
+  filter(t >= lower & t < upper) %>%
+  group_by(File_num,Item_No) %>%
+  mutate(전류load_1h = my.mode(전류load)) %>% 
+  mutate(평균IR_시계열SD_1h = sd(IR_Plates_mean,na.rm=TRUE),최대IR_시계열SD_1h = sd(IR_Plates_max,na.rm=TRUE),
+         IR플레이트_군집SD_평균_1h = mean(IR_Plates_sd,na.rm=TRUE), IR플레이트_군집SD_최대_1h = my.max(IR_Plates_sd), 
+         평균IR_시계열RANGE_1h = my.range(IR_Plates_mean),최대IR_시계열RANGE_1h = my.range(IR_Plates_max),
+         IR플레이트_군집RANGE_평균_1h = mean(IR_Plates_range,na.rm=TRUE), IR플레이트_군집RANGE_최대_1h = my.max(IR_Plates_range), 
+         IR_평균_1h = mean(IR_Plates_mean,na.rm=TRUE)) %>%
+  mutate(평균PI_시계열SD_1h = sd(PI_Plates_mean,na.rm=TRUE),최대PI_시계열SD_1h = sd(PI_Plates_max,na.rm=TRUE),
+         PI플레이트_군집SD_평균_1h = mean(PI_Plates_sd,na.rm=TRUE), PI플레이트_군집SD_최대_1h = my.max(PI_Plates_sd), 
+         평균PI_시계열RANGE_1h = my.range(PI_Plates_mean),최대PI_시계열RANGE_1h = my.range(PI_Plates_max),
+         PI플레이트_군집RANGE_평균_1h = mean(PI_Plates_range,na.rm=TRUE), PI플레이트_군집RANGE_최대_1h = my.max(PI_Plates_range), 
+         PI_평균_1h = mean(PI_Plates_mean,na.rm=TRUE)) %>%
+  mutate(Cell액높이_차압식_평균_1h = mean(Cell액높이_차압식,na.rm=TRUE), Cell액높이_차압식_SD_1h = sd(Cell액높이_차압식,na.rm=TRUE), 
+         Cell액높이_차압식_RANGE_1h = my.range(Cell액높이_차압식)) %>%
+  mutate(압력차이_평균_1h = mean(압력차이,na.rm=TRUE), 압력차이_SD_1h = sd(압력차이,na.rm=TRUE),
+         압력차이_RANGE_1h = my.range(압력차이)) %>% 
+  mutate(음극_압력_평균_1h = mean(음극_압력,na.rm=TRUE), 음극_압력_SD_1h = sd(음극_압력,na.rm=TRUE),
+         음극_압력_RANGE_1h = my.range(음극_압력)) %>%
+  mutate(양극_압력_평균_1h = mean(양극_압력,na.rm=TRUE), 양극_압력_SD_1h = sd(양극_압력,na.rm=TRUE),
+         양극_압력_RANGE_1h = my.range(양극_압력)) %>%
+  mutate(CW_CV_Opening_평균_1h = mean(CW_CV_Opening,na.rm=TRUE), CW_CV_Opening_SD_1h = sd(CW_CV_Opening,na.rm=TRUE),
+         CW_CV_Opening_RANGE_1h = my.range(CW_CV_Opening)) %>%
+  mutate(STM_CV_Opening_평균_1h = mean(STM_CV_Opening,na.rm=TRUE), STM_CV_Opening_SD_1h = sd(STM_CV_Opening,na.rm=TRUE),
+         STM_CV_Opening_RANGE_1h = my.range(STM_CV_Opening)) %>%
+  mutate(복도측액_온도_평균_1h = mean(복도측액_온도,na.rm=TRUE), 복도측액_온도_SD_1h = sd(복도측액_온도,na.rm=TRUE),
+         복도측액_온도_RANGE_1h = my.range(복도측액_온도)) %>%
+  mutate(유틸리티측액_온도_평균_1h = mean(유틸리티측액_온도,na.rm=TRUE), 유틸리티측액_온도_SD_1h = sd(유틸리티측액_온도,na.rm=TRUE),
+         유틸리티측액_온도_RANGE_1h = my.range(유틸리티측액_온도)) %>%  
+  mutate(양극집합관_온도_171_평균_1h = mean(양극집합관_온도_171,na.rm=TRUE), 양극집합관_온도_171_SD_1h = sd(양극집합관_온도_171,na.rm=TRUE),
+         양극집합관_온도_171_RANGE_1h = my.range(양극집합관_온도_171)) %>%
+  mutate(양극집합관_온도_172_평균_1h = mean(양극집합관_온도_172,na.rm=TRUE), 양극집합관_온도_172_SD_1h = sd(양극집합관_온도_172,na.rm=TRUE),
+         양극집합관_온도_172_RANGE_1h = my.range(양극집합관_온도_172)) %>%
+  mutate(양극집합관_온도_173_평균_1h = mean(양극집합관_온도_173,na.rm=TRUE), 양극집합관_온도_173_SD_1h = sd(양극집합관_온도_173,na.rm=TRUE),
+         양극집합관_온도_173_RANGE_1h = my.range(양극집합관_온도_173)) %>%
+  mutate(양극집합관_온도_평균_1h = mean(양극집합관_온도,na.rm=TRUE), 양극집합관_온도_SD_1h = sd(양극집합관_온도,na.rm=TRUE),
+         양극집합관_온도_RANGE_1h = my.range(양극집합관_온도)) %>%
+  mutate(음극집합관_온도_평균_1h = mean(음극집합관_온도,na.rm=TRUE), 음극집합관_온도_SD_1h = sd(음극집합관_온도,na.rm=TRUE),
+         음극집합관_온도_RANGE_1h = my.range(음극집합관_온도)) %>%
+  mutate(전압_평균_1h = mean(전압,na.rm=TRUE), 전압_SD_1h = sd(전압,na.rm=TRUE), 전압_RANGE_1h = my.range(전압)) %>%
+  ungroup
+df_1h_10min <- df_1h_10min[,c(1:4,38:98)] %>% arrange(File_num,Item_No) %>% distinct()
+
+df_1h_10min[sapply(df_1h_10min,is.infinite)] <- NA
+df_1h_10min[sapply(df_1h_10min,is.nan)] <- NA
+NArow <- which(is.na(df_1h_10min),arr.ind=TRUE)
+df_1h_10min <- df_1h_10min[-NArow[,1],]
+
+df_1h_10min$y <- as.factor(df_1h_10min$y)
+
+```
+
+### Data Importance & Model
+```{r rf modeling , message=FALSE, echo=FALSE }
+set.seed(0713)
+
+# 전류 load high
+load_high <- df_1h_10min %>% filter(전류load_1h >= 9500)
+DF <- load_high[,-c(1:3)]
+# importance
+forest <- randomForest(y~., data=DF)
+plot_1h <- varImpPlot(forest)
+# 전체 변수
+my.control<-rpart.control(xval=10, minsplit=15)
+tree <- rpart(y ~ ., data=DF,method="class", control= my.control)
+rpart.plot(tree)
+# 변수 선택 -전류load, 양극집합관, PI
+selDF <- DF[,c(1:2, 20, 45:53)]
+my.control<-rpart.control(xval=10, minsplit=17)
+tree <- rpart(y ~ ., data=selDF,method="class", control= my.control)
+rpart.plot(tree)
+
+```
+
+### 연소알람 울린 횟수
+
+```{r prediction , message=FALSE, echo=FALSE }
+
+# validation data 불러오기
+load(file="../Data/N3_Data_1차 연소 6월 검증_R_data/tw_df.Rdata")
+load(file="../Data/N3_Data_1차 연소 6월 검증_R_data/raw_df.Rdata")
+
+#연소 data 불러오기
+N3_Explosion_df <- read.csv(file = "../Data/N-3 4~6월 연소 현황 정리.csv") %>% select(Item_No, 연소발생일)
+N3_Explosion_df$연소발생일 <- as.POSIXct(N3_Explosion_df$연소발생일, origin="1899-12-30", tz="GMT")
+
+#전류 load 9500 이상 가이드라인 예측값
+load_high <- tw_df[tw_df$전류load_1h>=9500,]
+
+# tree 예측값
+load_high$pred_y <- predict(tree, newdata = load_high, type="class" )
+table(load_high$pred_y) # 262회 연소 예측 알람
+
+#연소로 예측한 시점
+pred_y1 <- load_high[load_high$pred_y==1,] %>% arrange(File_num,Time_group)
+
+#시간 포맷
+pred_y1$start_time <- as.POSIXct(pred_y1$start_time, origin="1899-12-30", tz="GMT")
+pred_y1$end_time <- as.POSIXct(pred_y1$end_time, origin="1899-12-30", tz="GMT")
+raw_df$Time <- as.POSIXct(raw_df$Time, origin="1899-12-30", tz="GMT")
+
+#Cell별로 그래프 확인할 구간 설정
+date_df <- pred_y1 %>% 
+  group_by(Item_No) %>%
+  mutate(date1 = ymd_hms(min(start_time)-hours(12)),
+         date2 = ymd_hms(max(end_time)+hours(12))) %>%
+  select(File_num, Item_No, date1, date2) %>%
+  distinct()
+
+#raw data에 필요한 변수와 확인구간 합치기
+raw_date_df <- raw_df %>%
+  inner_join(date_df, by=c("File_num","Item_No")) %>%
+  filter(date1 < Time & date2 > Time ) %>%
+  select(File_num, Item_No, Time, 전류load, 
+         양극집합관_온도_171, 양극집합관_온도_172,  양극집합관_온도_173 ,
+         PI_Plates_mean,
+         date1, date2)
+
+```
+
+```{r explosion , message=FALSE, echo=FALSE }
+# 6~7월 연소발생일
+N3_67 <- N3_Explosion_df %>% filter(month(연소발생일)==6 | month(연소발생일)==7) %>%
+  mutate(date1 = ymd_hms(연소발생일) - hours(6), date2 = ymd_hms(연소발생일) + hours(2))
+
+raw_Exp_df <- raw_df %>% 
+  select(File_num, Item_No, Time, 전류load, 
+         양극집합관_온도_171, 양극집합관_온도_172,  양극집합관_온도_173) %>% 
+  inner_join(N3_67, by = c("Item_No"))
+
+```
+
+
+### 연소 14건에 대해 6시간 전 시계열차트
+
+```{r plot , message=FALSE, echo=FALSE, warning=FALSE}
+Exp_date <- unique(raw_Exp_df$연소발생일)
+for(i in Exp_date){
+  tmp_df <- raw_Exp_df %>% filter(연소발생일==i) %>% filter(Time >= date1 & Time <= date2)
+  Explosion_Cell <- unique(tmp_df$Item_No)
+
+  p <- ggplot(tmp_df, aes(x=Time, y=전류load)) +
+    coord_cartesian(ylim = c(0, max(tmp_df$전류load))) + geom_line() + theme_bw() +
+    geom_vline(data = pred_y1 %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = tmp_df , aes(xintercept=연소발생일), color="red") +
+    ggtitle(paste0(Explosion_Cell," 셀의 전류 load ",tmp_df$연소발생일[1]))
+  
+  a <- ggplot(tmp_df, aes(x=Time, y=양극집합관_온도_171)) + # geom_line(color="blue") + 
+    geom_line(aes(x=Time, y=양극집합관_온도_172)) + # geom_line(color="green") +
+    geom_line(aes(x=Time, y=양극집합관_온도_173)) + # geom_line(color="red") +
+    coord_cartesian(ylim = c(40,60)) + geom_line() + theme_bw() +
+    geom_vline(data = pred_y1 %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="blue") + 
+    geom_vline(data = tmp_df , aes(xintercept=연소발생일), color="red") +
+    ggtitle(paste0(Explosion_Cell," 셀의 양극집합관 온도 ",tmp_df$연소발생일[1]))
+
+  print(p)
+  print(a)
+
+}
+
+```
+
+
+### 연소 예측 알람이 울린 셀 전체 시점의 시계열 차트
+
+```{r plot Predict, message=FALSE, echo=FALSE, warning=FALSE }
+
+cell_name <- unique(raw_date_df$Item_No)
+for (i in cell_name){
+  tmp_df <- raw_date_df %>% filter(Item_No==i)
+  p <- ggplot(tmp_df, aes(x=Time, y=전류load)) +
+    coord_cartesian(ylim = c(0, max(tmp_df$전류load))) + geom_line() + theme_bw() +
+    geom_vline(data = pred_y1 %>% filter(Item_No==i), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = N3_Explosion_df, aes(xintercept=연소발생일), color="yellow") +
+    geom_vline(data = N3_Explosion_df %>% filter(Item_No==i) , aes(xintercept=연소발생일), color="red") +
+    ggtitle(paste0(i," 셀의 전류 load ",tmp_df$연소발생일[1]))
+
+  a <- ggplot(tmp_df, aes(x=Time, y=양극집합관_온도_171)) + # geom_line(color="blue") +
+    geom_line(aes(x=Time, y=양극집합관_온도_172)) + # geom_line(color="green") +
+    geom_line(aes(x=Time, y=양극집합관_온도_173)) + # geom_line(color="red") +
+    coord_cartesian(ylim = c(35,55)) + geom_line() + theme_bw() +
+    geom_vline(data = pred_y1 %>% filter(Item_No==i), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = N3_Explosion_df, aes(xintercept=연소발생일), color="grey") +
+    geom_vline(data = N3_Explosion_df %>% filter(Item_No==i) , aes(xintercept=연소발생일), color="red") +
+    ggtitle(paste0(i," 셀의 양극집합관 온도 ",tmp_df$연소발생일[1]))
+
+  print(p)
+  print(a)
+
+}
+
+
+```
