@@ -1,7 +1,7 @@
 ---
 title: "Model_before_20min"
 author: "Yu Jisu"
-date: '2021 7 14 '
+date: '2021 7 19 '
 output:
   html_document :
     toc : true
@@ -22,11 +22,12 @@ if(!require(rpart)) install.packages('rpart'); require(rpart)
 if(!require(rpart.plot)) install.packages('rpart.plot'); require(rpart.plot)
 if(!require(caret)) install.packages('caret'); require(caret)
 if(!require(randomForest)) install.packages('randomForest'); require(randomForest)
+if(!require(crayon)) install.packages('crayon'); require(crayon)
 
 #directory - R_code
 print(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("./R_function.R")
+source("../R_function.R")
 ```
 
 
@@ -114,14 +115,15 @@ rpart.plot(tree)
 
 ### 연소알람 울린 횟수
 
-```{r prediction , message=FALSE, echo=FALSE }
+```{r prediction , message=FALSE, echo=FALSE, warning=FALSE }
 
 # validation data 불러오기
-load(file="../Data/N3_Data_1차 연소 6월 검증_R_data/tw_df.Rdata")
-load(file="../Data/N3_Data_1차 연소 6월 검증_R_data/raw_df.Rdata")
+load(file="D:/4.Cell Plate 운전표준수립/TEST_GuideLine/Data/N3_Data_1차 연소 6월 검증_R_data/tw_df.Rdata")
+#load(file="D:/4.Cell Plate 운전표준수립/TEST_GuideLine/Data/N3_Data_1차 연소 6월 검증_R_data/raw_df.Rdata")
 
 #연소 data 불러오기
-N3_Explosion_df <- read.csv(file = "../Data/N-3 4~6월 연소 현황 정리.csv") %>% select(Item_No, 연소발생일)
+N3_Explosion_df <- read.csv(file = "D:/4.Cell Plate 운전표준수립/TEST_GuideLine/Data/N-3 4~6월 연소 현황 정리.csv") %>% 
+  select(Item_No, 연소발생일)
 N3_Explosion_df$연소발생일 <- as.POSIXct(N3_Explosion_df$연소발생일, origin="1899-12-30", tz="GMT")
 
 #전류 load 9500 이상 가이드라인 예측값
@@ -137,7 +139,8 @@ pred_y1 <- load_high[load_high$pred_y==1,] %>% arrange(File_num,Time_group)
 #시간 포맷
 pred_y1$start_time <- as.POSIXct(pred_y1$start_time, origin="1899-12-30", tz="GMT")
 pred_y1$end_time <- as.POSIXct(pred_y1$end_time, origin="1899-12-30", tz="GMT")
-raw_df$Time <- as.POSIXct(raw_df$Time, origin="1899-12-30", tz="GMT")
+test_df$Time <- as.POSIXct(test_df$Time, origin="1899-12-30", tz="GMT")
+
 
 #Cell별로 그래프 확인할 구간 설정
 date_df <- pred_y1 %>% 
@@ -148,7 +151,7 @@ date_df <- pred_y1 %>%
   distinct()
 
 #raw data에 필요한 변수와 확인구간 합치기
-raw_date_df <- raw_df %>%
+raw_date_df <- test_df %>%
   inner_join(date_df, by=c("File_num","Item_No")) %>%
   filter(date1 < Time & date2 > Time ) %>%
   select(File_num, Item_No, Time, 전류load, 
@@ -156,42 +159,100 @@ raw_date_df <- raw_df %>%
          PI_Plates_mean,
          date1, date2)
 
+
+#반복 연소예측을 1회로 cnt (3시간 간격)
+tmp <- pred_y1[!is.na(pred_y1$File_num),c(1:5,17)] %>% arrange(File_num,Time_group)
+tmp$pred_y_group <- ifelse(tmp$Item_No != lag(tmp$Item_No), 1, 
+                          ifelse( tmp$Time_group-lag(tmp$Time_group) < 3*6,0,1))
+tmp$pred_y_group[is.na(tmp$pred_y_group)] <- 1
+pred_y1_group <- tmp %>% filter(pred_y_group==1) 
+pred_y1_group <- pred_y1_group  %>% filter(Item_No %in% unique(raw_date_df$Item_No))
+
+#예측이 실제 연소인 경우
+pred_y1_TT <- pred_y1_group %>% left_join(N3_Explosion_df , by=c("Item_No") )
+pred_y1_TT$TT <- ifelse(difftime(pred_y1_TT$연소발생일, pred_y1_TT$end_time, units="hours") < 3 &
+                          difftime(pred_y1_TT$연소발생일, pred_y1_TT$end_time, units="hours")> -1/2, 1,0)
+pred_y1_TT <- pred_y1_TT %>% filter(TT==1)
+
 ```
 
-```{r explosion , message=FALSE, echo=FALSE }
+```{r explosion , message=FALSE, echo=FALSE, warning=FALSE }
 # 6~7월 연소발생일
 N3_67 <- N3_Explosion_df %>% filter(month(연소발생일)==6 | month(연소발생일)==7) %>%
   mutate(date1 = ymd_hms(연소발생일) - hours(6), date2 = ymd_hms(연소발생일) + hours(2))
 
-raw_Exp_df <- raw_df %>% 
+raw_Exp_df <- test_df %>% 
   select(File_num, Item_No, Time, 전류load, 
          양극집합관_온도_171, 양극집합관_온도_172,  양극집합관_온도_173) %>% 
   inner_join(N3_67, by = c("Item_No"))
 
+
+```
+
+### 모델 성능
+
+```{r confusion matrix  , message=FALSE, echo=FALSE, warning=FALSE }
+
+#반복 연소예측을 1회로 cnt (3시간 간격)
+tmp <- pred_y1[!is.na(pred_y1$File_num),c(1:5,17)] %>% arrange(File_num,Time_group)
+tmp$pred_y_group <- ifelse(tmp$Item_No != lag(tmp$Item_No), 1, 
+                          ifelse( tmp$Time_group-lag(tmp$Time_group) < 3*6,0,1))
+tmp$pred_y_group[is.na(tmp$pred_y_group)] <- 1
+pred_y1_group <- tmp %>% filter(pred_y_group==1) 
+pred_y1_group <- pred_y1_group  %>% filter(Item_No %in% unique(raw_date_df$Item_No))
+
+#예측이 실제 연소인 경우
+pred_y1_TT <- pred_y1_group %>% left_join(N3_Explosion_df , by=c("Item_No") )
+pred_y1_TT$TT <- ifelse(difftime(pred_y1_TT$연소발생일, pred_y1_TT$end_time, units="hours") < 3 &
+                          difftime(pred_y1_TT$연소발생일, pred_y1_TT$end_time, units="hours")> -1/2, 1,0)
+pred_y1_TT <- pred_y1_TT %>% filter(TT==1)
+
+
+
+cnt_prediction <- nrow(pred_y1_group)
+cnt_explosion <- length(unique(raw_Exp_df$연소발생일))
+cnt_TT <-  nrow(pred_y1_TT)
+
+cat("연소 예측 알람 횟수 : ", cnt_prediction, "\n")
+cat("연소 횟수 : " , cnt_explosion, "\n")
+cat("실제 연소를 예측한 횟수 : ",cnt_TT, "\n")
+cat("Precision : ", round(cnt_TT/cnt_prediction*100,2), "%\n")
+cat("Recall : ", round(cnt_TT/cnt_explosion*100,2), "%\n")
+
 ```
 
 
-### 연소 14건에 대해 6시간 전 시계열차트
 
-```{r plot , message=FALSE, echo=FALSE, warning=FALSE}
+
+### 연소 14건 시계열차트
+```{r plot , message=FALSE, echo=FALSE, warning=FALSE }
+
+cat("연소 전 6시간 ~ ", "\n")
+cat(crayon::red("red : 연소 \n"))
+cat(crayon::blue("blue : 예측 \n"))
+cat(crayon::black("black : 최초 예측 \n"))
+
 Exp_date <- unique(raw_Exp_df$연소발생일)
 for(i in Exp_date){
   tmp_df <- raw_Exp_df %>% filter(연소발생일==i) %>% filter(Time >= date1 & Time <= date2)
   Explosion_Cell <- unique(tmp_df$Item_No)
+  Num <- which(Exp_date==i)
 
   p <- ggplot(tmp_df, aes(x=Time, y=전류load)) +
     coord_cartesian(ylim = c(0, max(tmp_df$전류load))) + geom_line() + theme_bw() +
-    geom_vline(data = pred_y1 %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = pred_y1 %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="blue")+
+    geom_vline(data = pred_y1_group %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="black", size=2) +
     geom_vline(data = tmp_df , aes(xintercept=연소발생일), color="red") +
-    ggtitle(paste0(Explosion_Cell," 셀의 전류 load ",tmp_df$연소발생일[1]))
-  
+    ggtitle(paste0(Num,". ",Explosion_Cell," 셀의 전류 load ",tmp_df$연소발생일[1]))
+
   a <- ggplot(tmp_df, aes(x=Time, y=양극집합관_온도_171)) + # geom_line(color="blue") + 
     geom_line(aes(x=Time, y=양극집합관_온도_172)) + # geom_line(color="green") +
     geom_line(aes(x=Time, y=양극집합관_온도_173)) + # geom_line(color="red") +
-    coord_cartesian(ylim = c(40,60)) + geom_line() + theme_bw() +
+    coord_cartesian(ylim = c(25,55)) + geom_line() + theme_bw() +
     geom_vline(data = pred_y1 %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="blue") + 
+    geom_vline(data = pred_y1_group %>% filter(Item_No==Explosion_Cell), aes(xintercept=end_time), color="black", size=2) +
     geom_vline(data = tmp_df , aes(xintercept=연소발생일), color="red") +
-    ggtitle(paste0(Explosion_Cell," 셀의 양극집합관 온도 ",tmp_df$연소발생일[1]))
+    ggtitle(paste0(Num,". ",Explosion_Cell," 셀의 양극집합관 온도 ",tmp_df$연소발생일[1]))
 
   print(p)
   print(a)
@@ -200,34 +261,45 @@ for(i in Exp_date){
 
 ```
 
+### 연소 예측 시계열 차트 (전류)
 
-### 연소 예측 알람이 울린 셀 전체 시점의 시계열 차트
+```{r plot Predict2, message=FALSE, echo=FALSE, warning=FALSE }
+
+cell_name <- unique(raw_date_df$Item_No)
+
+for (i in cell_name){
+  tmp_df <- raw_date_df %>% filter(Item_No==i)
+  p <- ggplot(tmp_df, aes(x=Time, y=전류load)) +
+    coord_cartesian(ylim = c(0, max(tmp_df$전류load))) + geom_line() + theme_bw() +
+    geom_vline(data = pred_y1 %>% filter(Item_No==i), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = pred_y1_group %>% filter(Item_No==i), aes(xintercept=end_time), color="black", size=2) +
+    geom_vline(data = N3_Explosion_df, aes(xintercept=연소발생일), color="yellow") +
+    geom_vline(data = N3_Explosion_df %>% filter(Item_No==i) , aes(xintercept=연소발생일), color="red") +
+    ggtitle(paste0(i," 셀의 전류 load ")) 
+  print(p)
+
+}
+
+```
+
+### 연소 예측 시계열 차트 (양극집합관 온도)
 
 ```{r plot Predict, message=FALSE, echo=FALSE, warning=FALSE }
 
 cell_name <- unique(raw_date_df$Item_No)
 for (i in cell_name){
   tmp_df <- raw_date_df %>% filter(Item_No==i)
-  p <- ggplot(tmp_df, aes(x=Time, y=전류load)) +
-    coord_cartesian(ylim = c(0, max(tmp_df$전류load))) + geom_line() + theme_bw() +
-    geom_vline(data = pred_y1 %>% filter(Item_No==i), aes(xintercept=end_time), color="blue") +
-    geom_vline(data = N3_Explosion_df, aes(xintercept=연소발생일), color="yellow") +
-    geom_vline(data = N3_Explosion_df %>% filter(Item_No==i) , aes(xintercept=연소발생일), color="red") +
-    ggtitle(paste0(i," 셀의 전류 load ",tmp_df$연소발생일[1]))
-
   a <- ggplot(tmp_df, aes(x=Time, y=양극집합관_온도_171)) + # geom_line(color="blue") +
     geom_line(aes(x=Time, y=양극집합관_온도_172)) + # geom_line(color="green") +
     geom_line(aes(x=Time, y=양극집합관_온도_173)) + # geom_line(color="red") +
-    coord_cartesian(ylim = c(35,55)) + geom_line() + theme_bw() +
+    coord_cartesian(ylim = c(25,55)) + geom_line() + theme_bw() +
     geom_vline(data = pred_y1 %>% filter(Item_No==i), aes(xintercept=end_time), color="blue") +
+    geom_vline(data = pred_y1_group %>% filter(Item_No==i), aes(xintercept=end_time), color="black", size=2) +
     geom_vline(data = N3_Explosion_df, aes(xintercept=연소발생일), color="grey") +
     geom_vline(data = N3_Explosion_df %>% filter(Item_No==i) , aes(xintercept=연소발생일), color="red") +
-    ggtitle(paste0(i," 셀의 양극집합관 온도 ",tmp_df$연소발생일[1]))
+    ggtitle(paste0(i," 셀의 양극집합관 온도 "))
 
-  print(p)
   print(a)
 
 }
 
-
-```
