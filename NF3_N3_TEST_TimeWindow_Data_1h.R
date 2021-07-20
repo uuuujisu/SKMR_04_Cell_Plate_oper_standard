@@ -122,7 +122,7 @@ raw_df$PI_Plates_max <- rowMaxs(as.matrix(raw_df[,c(PIs)]),na.rm=TRUE)
 raw_df$PI_Plates_range <- raw_df$PI_Plates_max - raw_df$PI_Plates_min
 
 #전류 load
-raw_df$전류load <- round(raw_df$IR_Plates_mean,digit=-2)
+raw_df$전류load<-round(rowSums(raw_df[,c(IRs)], na.rm = TRUE),digit=-2)
 
 # 측액온도차이
 raw_df$측액온도차이 <- abs(raw_df$유틸리티측액_온도 - raw_df$복도측액_온도)
@@ -131,7 +131,7 @@ raw_df$측액온도차이 <- abs(raw_df$유틸리티측액_온도 - raw_df$복도측액_온도)
 raw_df$양극집합관_온도 <- rowMeans(raw_df[,c('양극집합관_온도_171','양극집합관_온도_172','양극집합관_온도_173')],na.rm=TRUE)
 
 setwd("../N3_Data_1차 연소 6월 검증_R_data")
-# save(raw_df,IRs,PIs,file="raw_df_total.Rdata")
+#save(raw_df,IRs,PIs,file="raw_df_total.Rdata")
 load(file="raw_df_total.Rdata")
 # load(file="raw_df.Rdata")
 
